@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Route, Switch } from 'react-router-dom'
-import "./../node_modules/bootstrap/dist/css/bootstrap.min.css";
-import "./../node_modules/bootstrap/dist/js/bootstrap.bundle";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle";
 import Errorpage from './components/Error/Errorpage';
 import Home from './components/Home/Home';
 import Rooms from './components/Room/Rooms';
