@@ -49,20 +49,29 @@ router.post('/login', async (req, res) => {
         const userExists = await User.findOne({ userName: userName });
 
         if (userExists){
-            isMatch = await bcrypt.compare(password, userExists.password);
-            
-            const token = await userExists.generateAuthToken();
-            console.log(token);
-
-            res.cookie("jwtToken", token, { 
-                expires:new Date(Date.now(), 25892000000),
-                httpOnly:true
-            });
+            const isMatch = await bcrypt.compare(password, userExists.password);
             
             if (!isMatch) {
                 res.status(400).json({error: "Invalid credentials"});   
             } else {
-                res.json({message: "Logged In successfully"});
+                const token = await userExists.generateAuthToken();
+                console.log(token);
+
+                res.cookie("jwtToken", token, {
+                    expires: new Date(Date.now() + 25892000000),
+                    httpOnly: true,
+                    sameSite: 'lax',
+                    path: '/'
+                });
+
+                res.json({
+                    message: "Logged In successfully",
+                    user: {
+                        _id: userExists._id,
+                        userName: userExists.userName,
+                        email: userExists.email
+                    }
+                });
             }
         }
         else{
@@ -91,22 +100,14 @@ router.get('/inaroom', authenticate, (req, res) => {
     res.send(req.rootUser);
 })
 
-router.get('/checkforUser', (req, res)=>{
-    console.log("checking for Token-->");
-    try {
-        console.log("checking userA-->")
-        console.log(req.cookies)
-        console.log(Object.keys(req.cookies).length+"length");
-        console.log(req.cookies.jwtToken+"-->jwttok");
-        if (req.cookies.jwtToken===undefined) {
-            res.status(200).json({isuser: "0"});
+router.get('/checkforUser', authenticate, (req, res)=>{
+    res.status(200).json({
+        isuser: "1",
+        user: {
+            _id: req.rootUser._id,
+            userName: req.rootUser.userName,
+            email: req.rootUser.email
         }
-        else{
-            res.status(200).json({isuser: "1"});
-        }
-
-    } catch (error) {
-        res.status(200).json({message: "Some error occured"});
-    }
+    });
 })
 module.exports = router;

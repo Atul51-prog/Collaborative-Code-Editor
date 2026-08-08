@@ -25,6 +25,13 @@ import PlayArrowRoundedIcon from '@material-ui/icons/PlayArrowRounded';
 const MyEditor = (props) => {
 
 	const socket = props.socket;
+	const {
+		nameOfUser,
+		setcodeInRoom,
+		setlanguageInRoom,
+		setRoomTheme,
+		setRoomFontSize,
+	} = props;
     const history = useHistory();
 
 	const [theme, setTheme] = useState("vs-dark");
@@ -36,7 +43,6 @@ const MyEditor = (props) => {
 	const [editorCode, seteditorCode] = useState("")
 	// Set value of editor
 	const [value, setValue] = useState('')
-	const [valid, setValid] = useState(false)
 	const [sendInitialData, setSendInitialData] = useState(false)
 	const [users, setUsers] = useState(0)
 	const [title, setTitle] = useState("Untitled")
@@ -52,21 +58,67 @@ const MyEditor = (props) => {
 	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
 	let { id } = useParams();
-
-	// Check if room exists
+	const roomStorageKey = `syncode.room.${id}`;
 
 	useEffect(() => {
-		if (socket===undefined) {
-			props.setIsDisconnected(true);
-			history.push("/");
-		} else {
-			socket.emit('room-id', id)
-			setValid(true)
-		}
-		return ()=>{
+		const storedRoom = localStorage.getItem(roomStorageKey);
 
+		if (!storedRoom) {
+			return;
 		}
-	}, [])
+
+		try {
+			const roomState = JSON.parse(storedRoom);
+
+			if (roomState.code) {
+				setValue(roomState.code);
+				seteditorCode(roomState.code);
+				setcodeInRoom(roomState.code);
+			}
+
+			if (roomState.title) {
+				setTitle(roomState.title);
+				setTitleInfo(roomState.title);
+			}
+
+			if (roomState.language) {
+				setLanguage(roomState.language);
+				setlanguageInRoom(roomState.language);
+			}
+		} catch (error) {
+			console.log(error);
+			localStorage.removeItem(roomStorageKey);
+		}
+	}, [roomStorageKey, setcodeInRoom, setlanguageInRoom]);
+
+	useEffect(() => {
+		localStorage.setItem(roomStorageKey, JSON.stringify({
+			code: editorCode,
+			title,
+			language,
+		}));
+	}, [roomStorageKey, editorCode, title, language]);
+
+	// Join the current room after the socket is ready, including reconnects.
+	useEffect(() => {
+		if (!socket || !nameOfUser) {
+			return;
+		}
+
+		const joinCurrentRoom = () => {
+			socket.emit('join-room', { id, nameOfUser });
+		};
+
+		if (socket.connected) {
+			joinCurrentRoom();
+		}
+
+		socket.on('connect', joinCurrentRoom);
+
+		return () => {
+			socket.off('connect', joinCurrentRoom);
+		};
+	}, [socket, id, nameOfUser])
 
 	// Ref for editor
 	const editorRef = useRef()
@@ -80,7 +132,7 @@ const MyEditor = (props) => {
 	// Called whenever there is a change in the editor
 	const handleEditorChange = (value, event) => {
 		seteditorCode(value)
-		props.setcodeInRoom(value)
+		setcodeInRoom(value)
 	};
 
 	// For theme of code editor
@@ -96,7 +148,7 @@ const MyEditor = (props) => {
 			});
 		}
 		setTheme(theme === "light" ? "vs-dark" : "light")
-		props.setRoomTheme(theme === "light" ? "vs-dark" : "light")
+		setRoomTheme(theme === "light" ? "vs-dark" : "light")
 	}
 
 	//for copying room code
@@ -109,106 +161,101 @@ const MyEditor = (props) => {
 
 	// If language changes on one socket, emit to all other
 	useEffect(() => {
-		if (socket===undefined) {
-			props.setIsDisconnected(true);
-			history.push("/");
-		} else {
+		if (socket) {
 			socket.emit('language-change', language)
 		}
 		
-	}, [language])
+	}, [socket, language])
 
 
 	// If there is a code change on a socket, emit to all other
 	useEffect(() => {
-		if (socket===undefined) {
-			history.push("/");
-		} else {
+		if (socket) {
 			socket.emit('code-change', editorCode)
 		}
 		
-	}, [editorCode])
+	}, [socket, editorCode])
 
 	// If there is a title change on a socket, emit to all other
 	useEffect(() => {
-		if (socket===undefined) {
-			props.setIsDisconnected(true);
-			history.push("/");
-		} else {
+		if (socket) {
 			socket.emit('title-change', title)
 		}
 		
-	}, [title])
+	}, [socket, title])
 
 
 	// Recieve code, title and language changes
 	useEffect(() => {
-		if (socket===undefined) {
-			props.setIsDisconnected(true);
-			history.push("/");
-		}
-		else{
-			socket.on('code-update', (data) => {
-				setValue(data)
-				props.setcodeInRoom(data.code)
-			})
-			socket.on('language-update', (data) => {
-				setLanguage(data)
-				props.setlanguageInRoom(data)
-			})
-	
-			socket.on('title-update', (data) => {
-				setTitleInfo(data)
-			})
-	
-			socket.on('receive-message', message => {
-				setMessages(messages => [...messages, message]);
-			});
-	
-			socket.on('room-check', (data) => {
-				if (data === false) {
-					setValid(false)
-				} else {
-					socket.emit('join-room', { id, nameOfUser: props.nameOfUser })
-				}
-	
-			})
-	
-			socket.on('request-info', (data) => {
-				setSendInitialData(true)
-			})
-	
-			// Triggered if new user joins
-			socket.on('accept-info', (data) => {
-				setTitleInfo(data.title)
-				setLanguage(data.language)
-				props.setlanguageInRoom(data.language)
-				setValue(data.code)
-				props.setcodeInRoom(data.code)
-			})
-	
-			// Update participants
-			socket.on('joined-users', (data) => {
-				setUsers(data)
-			})
+		if (!socket) {
+			return;
 		}
 
-	}, [])
+		const handleCodeUpdate = (data) => {
+			const nextCode = typeof data === 'string' ? data : data?.code || '';
+			setValue(nextCode)
+			setcodeInRoom(nextCode)
+		}
+
+		const handleLanguageUpdate = (data) => {
+			setLanguage(data)
+			setlanguageInRoom(data)
+		}
+
+		const handleTitleUpdate = (data) => {
+			setTitleInfo(data)
+		}
+
+		const handleReceiveMessage = message => {
+			setMessages(messages => [...messages, message]);
+		};
+
+		const handleRequestInfo = () => {
+			setSendInitialData(true)
+		}
+
+		const handleAcceptInfo = (data) => {
+			setTitleInfo(data.title)
+			setLanguage(data.language)
+			setlanguageInRoom(data.language)
+			setValue(data.code)
+			setcodeInRoom(data.code)
+		}
+
+		const handleJoinedUsers = (data) => {
+			setUsers(data)
+		}
+
+		socket.on('code-update', handleCodeUpdate)
+		socket.on('language-update', handleLanguageUpdate)
+		socket.on('title-update', handleTitleUpdate)
+		socket.on('receive-message', handleReceiveMessage);
+		socket.on('request-info', handleRequestInfo)
+		socket.on('accept-info', handleAcceptInfo)
+		socket.on('joined-users', handleJoinedUsers)
+
+		return () => {
+			socket.off('code-update', handleCodeUpdate)
+			socket.off('language-update', handleLanguageUpdate)
+			socket.off('title-update', handleTitleUpdate)
+			socket.off('receive-message', handleReceiveMessage);
+			socket.off('request-info', handleRequestInfo)
+			socket.off('accept-info', handleAcceptInfo)
+			socket.off('joined-users', handleJoinedUsers)
+		}
+	}, [socket, setcodeInRoom, setlanguageInRoom])
 
 
 	// If a new user join, send him current language and title used by other sockets.
 	useEffect(() => {
-		if (socket===undefined) {
-			props.setIsDisconnected(true);
-			history.push("/")
-		} else {
+		if (socket) {
 			if (sendInitialData === true) {
 				socket.emit('user-join', { code: editorCode, title: title, language: language })
 				setSendInitialData(false)
 			}
 		}
 		
-	}, [sendInitialData])
+	}, [socket, sendInitialData, editorCode, title, language])
 
 	const languages = ["cpp", "python", "javascript", "c", "java", "go"]
 	const languageExtension = ["cpp", "py", "js", "c", "java", "go"]
@@ -216,13 +263,13 @@ const MyEditor = (props) => {
 
 	const changeLanguage = (e) => {
 		setLanguage(languages[e.target.value])
-		props.setlanguageInRoom(languages[e.target.value])
+		setlanguageInRoom(languages[e.target.value])
 		setfileExtensionValue(e.target.value)
 	}
 
 	const changeFontSize = (e) => {
 		setFontsize(fontSizes[e.target.value])
-		props.setRoomFontSize(fontSizes[e.target.value])
+		setRoomFontSize(fontSizes[e.target.value])
 	}
 
 	const titleUpdating = (e) => {
@@ -231,22 +278,17 @@ const MyEditor = (props) => {
 	}
 
 	const leaveRoom = (e) =>{
-		if (socket===undefined) {
-			props.setIsDisconnected(true);
-			history.push("/");
-		} else {
-			socket.emit('leaving', {nameOfUser: props.nameOfUser});
-			socket.disconnect();
-			props.setIsDisconnected(true);
-			history.push("/");
+		if (socket) {
+			socket.emit('leaving', {nameOfUser});
 		}
+		history.push("/");
 	}
 
 	const sendMessage = (event) => {
 		event.preventDefault();
 
-		if (message) {
-			socket.emit('sendMessage', { message, sender: props.nameOfUser });
+		if (message && socket) {
+			socket.emit('sendMessage', { message, sender: nameOfUser });
 			setMessage("");
 		}
 	}
@@ -267,7 +309,7 @@ const MyEditor = (props) => {
 		reader.onload = async (e) => { 
 		  const text = (e.target.result)
 		  setValue(text)
-		  props.setcodeInRoom(text)
+		  setcodeInRoom(text)
 		  seteditorCode(text)
 		//   alert(text)
 		};
@@ -284,14 +326,20 @@ const MyEditor = (props) => {
 	return (
 		<>
 			<BrowserView className="w-100">
+				{!socket && (
+					<div style={{ padding: '2rem', textAlign: 'center' }}>Connecting to room...</div>
+				)}
+
+				{socket && (
+				<>
 
 				<nav className="navbar navbar-expand-lg navbar-light bg-white shadow mb-1 py-0">
 					<NavLink className="navbar-brand" to="/" onClick={leaveRoom}>SynCode</NavLink>
 					<button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 						<span className="navbar-toggler-icon"></span>
 					</button>
-					<form class="d-flex">
-						<input class="form-control me-2" type="text" placeholder="Enter file name here" aria-label="Search" value={titleInfo} onChange={titleUpdating} />
+					<form className="d-flex">
+						<input className="form-control me-2" type="text" placeholder="Enter file name here" aria-label="Search" value={titleInfo} onChange={titleUpdating} />
 						{titleChange === true &&
 							<button className="btn ml-2 btn-outline-success">
 								<IconContext.Provider value={{size:"1.4em"}}>
@@ -355,11 +403,11 @@ const MyEditor = (props) => {
 							</li>
 
 							<li className="nav-item mr-2">
-								<select className="custom-select mt-1" title="change font size" onChange={changeFontSize}>
+								<select className="custom-select mt-1" title="change font size" defaultValue="3" onChange={changeFontSize}>
 									<option value="0">10px</option>
 									<option value="1">12px</option>
 									<option value="2">14px</option>
-									<option value="3" selected>16px</option>
+									<option value="3">16px</option>
 									<option value="4">18px</option>
 									<option value="5">20px</option>
 									<option value="6">22px</option>
@@ -407,7 +455,7 @@ const MyEditor = (props) => {
 					</section>
 					<section className="ml-auto mr-1 d-flex" style={{width:"30.5%"}}>
 						<div className="mr-auto d-flex flex-column border border-warning" style={{ minWidth: "60vh", width:"100%", height: "65vh", backgroundColor: "white", borderRadius: "20px"}}>
-							<Messages messages={messages} nameOfUser={props.nameOfUser}>
+							<Messages messages={messages} nameOfUser={nameOfUser}>
 							</Messages>
 							<Input message={message} setMessage={setMessage} sendMessage={sendMessage}></Input>
 						</div>
@@ -415,6 +463,8 @@ const MyEditor = (props) => {
 
 
 				</div>
+				</>
+				)}
 			</BrowserView>
 			<MobileView>
 				<div className="mobile-notValid text-center" style={{position:'absolute', top:"50%", left:"50%", transform:'translate(-50%, -50%)'}}>

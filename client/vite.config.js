@@ -13,6 +13,8 @@ export default defineConfig({
       '/checkforUser': 'http://localhost:5000',
       '/roomsforuser': 'http://localhost:5000',
       '/logout': 'http://localhost:5000',
+      '/ai': 'http://localhost:5000',
+      '/execute': 'http://localhost:5000',
     },
   },
 });

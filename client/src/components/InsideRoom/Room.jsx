@@ -3,6 +3,7 @@ import MyEditor from './../Editor/myEditor';
 import Box from './../EditorBox/Box';
 import axios from "axios";
 import InputBox from './../EditorBox/InputBox';
+import AIChatPanel from './../ChatFeature/AIChatPanel';
 import { useSnackbar } from 'notistack';
 
 import 'react-reflex/styles.css'
@@ -54,7 +55,7 @@ const Room = (props) => {
 
 		const response = await axios({
 			method: "POST",
-			url: `http://localhost:5000/execute`,
+			url: `/execute`,
 			data: {
 				script: script,
 				language: language,
@@ -98,12 +99,11 @@ const Room = (props) => {
 	}
 
 	return (
-		<div>
-			<div className="d-flex">
+		<div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+			<div className="d-flex" style={{ flex: 1 }}>
 				<MyEditor
 					socket={socket}
 					nameOfUser={props.nameOfUser}
-					setIsDisconnected={props.setIsDisconnected}
 					setRoomTheme={setRoomTheme}
 					setRoomFontSize={setRoomFontSize}
 					runcode={runCode}
@@ -113,17 +113,19 @@ const Room = (props) => {
 				</MyEditor>
 			</div>
 			
-			<div className="d-flex">
-				<div className="border mr-auto ml-1" style={{width:"37.5%"}}>
+			<div className="d-flex" style={{ height: '200px', borderTop: '1px solid #e1e4e8' }}>
+				<div className="border mr-auto ml-1" style={{width:"33%", borderRight: '1px solid #e1e4e8'}}>
 					<InputBox feature="Input" theme={RoomTheme} setProperty={setInput} fontSize={RoomFontSize}/>
 				</div>
-				<div className="border" style={{width:"37.5%"}}>
+				<div className="border" style={{width:"33%", borderRight: '1px solid #e1e4e8'}}>
 					<Box feature={isError?"Error":"Output"} theme={RoomTheme} value={output} fontSize={RoomFontSize}/>
 				</div>
-				<div className="border ml-auto mr-1" style={{width:"24%"}}>
+				<div className="border" style={{width:"16%", borderRight: '1px solid #e1e4e8'}}>
 					<Box feature="Stats" theme={RoomTheme} value={stats} fontSize={RoomFontSize}/>
 				</div>
-				
+				<div style={{width:"18%", display: 'flex', flexDirection: 'column', background: '#fff'}}>
+					<AIChatPanel />
+				</div>
 			</div>
 		</div>
 	)

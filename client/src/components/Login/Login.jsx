@@ -14,6 +14,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import {useHistory} from 'react-router-dom'
 import { useSnackbar } from 'notistack';
+import { useAuth } from '../../auth';
 
 function Copyright() {
   return (
@@ -55,6 +56,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Login() {
     const classes = useStyles();
+    const { login } = useAuth();
 
   	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -82,37 +84,20 @@ export default function Login() {
     const postDataLogin = async (e) => {
         e.preventDefault();
 
-        const { userName, password } = user;
-        console.log(user);
-        console.log(userName);
-        const res = await fetch("/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                userName, password
-            })
-        })
+        try {
+          const { userName, password } = user;
+          await login({ userName, password });
+          enqueueSnackbar('Logged in successfully', {
+            variant: "success"
+          })
+          console.log("Logged In Successfull");
 
-        console.log("Hello")
-
-        const data = await res.json();
-        console.log(res);
-        console.log(data);
-        if (res.status===422 || res.status===400 || !data) {
+          history.push(history.location.state?.from?.pathname || "/");
+        } catch (error) {
           enqueueSnackbar('Invalid Credentials', {
             variant: "error"
           })
             console.log("Invalid Credentials");
-        }
-        else {
-          enqueueSnackbar('Logged in successfully', {
-            variant: "success"
-          })
-            console.log("Logged In Successfull");
-
-            history.push("/");
         }
     }
 
@@ -137,7 +122,7 @@ export default function Login() {
                 variant="outlined"
                 required
                 fullWidth
-                value={user.name}
+                value={user.userName}
                 id="currUsername"
                 label="Username"
                 onChange={handleInputs}

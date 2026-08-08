@@ -1,44 +1,66 @@
+const path = require('path');
 const dotenv = require('dotenv');
-const cors =  require('cors');
+const cors = require('cors');
 const mongoose = require('mongoose');
 const http = require('http');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const app = express();
 const httpServer = new http.Server(app);
-const axios = require("axios");
+const axios = require('axios');
 
+dotenv.config({ path: path.resolve(__dirname, 'config.env') });
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:5177",
+];
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
 app.use(
-    cors({
-      origin: CLIENT_URL,
-      methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-      credentials: true, // allow session cookies from browser to pass throught
-    })
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin) || origin === CLIENT_URL) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
 );
-
 app.use(cookieParser());
 
-dotenv.config({path:'./config.env'});
-
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 require('./db/connec');
 
 app.use(require('./router/auth'));
+app.use(require('./router/ai').router);
 
 const User = require('./models/userSchema');
 
-const PORT = process.env.PORT;
+const PORT = Number(process.env.PORT) || 5000;
 
 var rooms = []
 var removeRooms = []
 
 const io = require("socket.io")(httpServer, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || origin === CLIENT_URL) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by Socket.IO CORS"));
+      }
+    },
     methods: ["GET", "POST"],
+    credentials: true,
   },
 })
 
@@ -94,6 +116,9 @@ io.on("connection", socket => {
   // Add room to socket
   socket.on('join-room', msg => {
       console.log("JOINING " + msg.id)
+      if (!rooms.includes(msg.id)) {
+          rooms.push(msg.id)
+      }
       socket.room = msg.id
       socket.join(msg.id);
       console.log(io.sockets.adapter.rooms);
@@ -176,7 +201,11 @@ io.on("connection", socket => {
 })
 
 app.get('/', (req, res) => {
-    res.send(`Welcome`);
+    res.send('Welcome');
+});
+
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
 });
 
 app.post('/execute', async (req, res)=>{
@@ -203,6 +232,17 @@ app.post('/execute', async (req, res)=>{
 
 console.log('Hello world from server IndexJS');
 removingRooms();
+
+httpServer.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Stop the old backend process, then run npm start again.`);
+        process.exit(1);
+    }
+
+    console.error(err);
+    process.exit(1);
+});
+
 httpServer.listen(PORT, () => {
     console.log(`port ${PORT}`);
 });

@@ -11,15 +11,26 @@ import { SnackbarProvider } from "notistack";
 import CreateAccount from './pages/CreateAccount';
 import LoginPage from './pages/LoginPage';
 import Logout from './pages/Logout';
+import { AuthProvider, useAuth } from './auth';
+import ProtectedRoute from './ProtectedRoute';
 
 
-const App = () => {
+const AppRoutes = () => {
 
 	const [socket, setSocket] = useState()
-	const [nameOfUser, setNameOfUser] = useState("")
-	// const socket = io("http://localhost:5000");
-	const [isLogout, setIsLogout] = useState('0');
+	const { user, isAuthenticated } = useAuth();
+
 	useEffect(() => {
+		if (!isAuthenticated) {
+			setSocket((currentSocket) => {
+				if (currentSocket) {
+					currentSocket.disconnect();
+				}
+				return undefined;
+			});
+			return;
+		}
+
 		const s = io("http://localhost:5000");
 		console.log(s);
 		setSocket(s);
@@ -27,32 +38,13 @@ const App = () => {
 		return () => {
 			s.disconnect();
 		}
-	}, []);
-
-	const [isDisconnected, setIsDisconnected] = useState(false);
-
-	useEffect(() => {
-
-		if (isDisconnected===true) {
-			const s = io("http://localhost:5000");
-			console.log(s);
-			setSocket(s);
-			console.log("USEEFFECT")
-			window.location.reload();
-			setIsDisconnected(false);
-
-			return () => {
-				s.disconnect();
-			}
-		}
-		
-	}, [isDisconnected]);
+	}, [isAuthenticated]);
 
 	return (
 		<SnackbarProvider>
 				<Switch>
 					<Route exact path="/">
-						<Home isLogout={isLogout} setIsLogout={setIsLogout}></Home>
+						<Home></Home>
 					</Route>
 
 					<Route path="/login">
@@ -63,17 +55,17 @@ const App = () => {
 						<CreateAccount></CreateAccount>
 					</Route>
 
-					<Route path="/rooms">
-						<Rooms socket={socket} setNameOfUser={setNameOfUser}></Rooms>
-					</Route>
+					<ProtectedRoute path="/rooms">
+						<Rooms socket={socket}></Rooms>
+					</ProtectedRoute>
 
 
-					<Route path="/room/:id">
-						<Room socket={socket} nameOfUser={nameOfUser} setIsDisconnected={setIsDisconnected}></Room>
-					</Route>
+					<ProtectedRoute path="/room/:id">
+						<Room socket={socket} nameOfUser={user?.userName || ''}></Room>
+					</ProtectedRoute>
 
 					<Route path="/logout">
-						<Logout setIsLogout={setIsLogout}></Logout>
+						<Logout></Logout>
 					</Route>
 
 					<Route>
@@ -84,5 +76,11 @@ const App = () => {
 		</SnackbarProvider>
 	)
 }
+
+const App = () => (
+	<AuthProvider>
+		<AppRoutes />
+	</AuthProvider>
+)
 
 export default App

@@ -1,29 +1,20 @@
 import React, { useEffect } from 'react'
 import { useHistory } from 'react-router';
+import { useAuth } from '../auth';
 
-const Logout = (props) => {
+const Logout = () => {
 
 
     const history = useHistory();
+    const { logout } = useAuth();
+
     useEffect(()=>{
-        fetch('/logout', {
-            method: "GET",
-            headers: {
-                Accept: 'application/json',
-                "Content-Type": "application/json"
-            },
-            credentials: "include"
-        }).then((res)=>{
-            props.setIsLogout("1");
+        logout().then(() => {
             history.push('/');
-            if (res.status !== 200) {
-                const err = new Error(res.error);
-                throw err;
-            }
         }).catch((err)=>{
             console.log(err)
         })
-    });
+    }, [history, logout]);
 
     return (
         <div>

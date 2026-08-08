@@ -6,36 +6,12 @@ import roombackground from './../../assets/Backgrounds/rooms.svg'
 import Button from '@material-ui/core/Button';
 import './Rooms.css';
 import Typewriter from 'typewriter-effect';
+import { useAuth } from '../../auth';
 
 const Rooms = (props) => {
 
     const history = useHistory();
-    const [userData, setUserData] = useState({});
-
-    const checkForAuthentication = async () => {
-        try {
-            const res = await fetch('/roomsforuser', {
-                method: "GET",
-                headers: {
-                    Accept: 'application/json',
-                    "Content-Type": "application/json"
-                },
-                credentials: "include"
-            });
-
-            const data = await res.json();
-            setUserData(data);
-            props.setNameOfUser(data.userName);
-
-            if (!(res.status === 200)) {
-                throw new Error(res.error);
-            }
-        } catch (error) {
-            console.log("NO LOGIN");
-            console.log(error);
-            history.push("/login");
-        }
-    }
+    const { user } = useAuth();
 
     const [roomCode, setroomCode] = useState("");
 
@@ -44,21 +20,18 @@ const Rooms = (props) => {
         setroomCode(text)
       }
 
-    useEffect(() => {
-        checkForAuthentication();
-
-    }, []);
-
     const socket = props.socket;
 
     useEffect(() => {
         if (roomCode !== "") {
-            socket.emit('created-room', roomCode)
+            if (socket) {
+                socket.emit('created-room', roomCode)
+            }
             console.log('CREATED-ROOM')
             history.push(`/room/${roomCode}`)
         }
     
-    }, [roomCode]);
+    }, [roomCode, history, socket]);
 
     const [joinRoom, setJoinRoom] = useState("");
     const [roomLink, setRoomLink] = useState("");
@@ -72,12 +45,11 @@ const Rooms = (props) => {
 
     useEffect(() => {
         if (roomLink !== "") {
-            socket.emit('create-room', roomLink);
             console.log('JOINED-ROOM');
             history.push(`/room/${roomLink}`);
         }
     
-    }, [roomLink]);
+    }, [roomLink, history]);
 
 
     return (
@@ -104,7 +76,7 @@ const Rooms = (props) => {
             <header>
                 <div className="container">
                 <div className="banner-text">
-                    <h2>Hey!! {userData.userName}
+                    <h2>Hey!! {user?.userName}
                         <Typewriter
                             onInit={(typewriter)=>{
                                 typewriter

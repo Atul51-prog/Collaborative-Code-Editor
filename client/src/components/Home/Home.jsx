@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom';
 import './Home.css';
 import { NavLink } from 'react-router-dom';
@@ -6,50 +6,47 @@ import {
 	BrowserView,
 	MobileView
 } from "react-device-detect";
+import { useAuth } from '../../auth';
+import GroupWorkOutlinedIcon from '@material-ui/icons/GroupWorkOutlined';
+import AssistantOutlinedIcon from '@material-ui/icons/AssistantOutlined';
+import CodeOutlinedIcon from '@material-ui/icons/CodeOutlined';
+import ForumOutlinedIcon from '@material-ui/icons/ForumOutlined';
 
-const Home = (props) => {
+const features = [
+    {
+        icon: <GroupWorkOutlinedIcon />,
+        title: 'Real-Time Collaboration',
+        text: 'Multiple developers can edit the same file simultaneously with live cursor tracking.',
+    },
+    {
+        icon: <AssistantOutlinedIcon />,
+        title: 'Integrated AI Assistant',
+        text: 'Ask coding questions, generate code, explain logic and debug errors without leaving the workspace.',
+    },
+    {
+        icon: <CodeOutlinedIcon />,
+        title: 'Built-in Compiler',
+        text: 'Run code instantly and view output inside the browser.',
+    },
+    {
+        icon: <ForumOutlinedIcon />,
+        title: 'Team Communication',
+        text: 'Share ideas through live messaging while writing code.',
+    },
+];
 
-	const [Isuser, setIsuser] = useState("0")
+const audiences = ['Students', 'Interview Preparation', 'Developers', 'Hackathon Teams'];
+const workflowItems = ['Create a room', 'Invite collaborators', 'Write and run code', 'Discuss changes'];
 
-    const checkForUser= async () => {
-        try {
-            const res = await fetch('/checkforUser', {
-                method: "GET",
-                headers: {
-                    Accept: 'application/json',
-                    "Content-Type": "application/json"
-                },
-                credentials: "include"
-            });
-
-            const data = await res.json();
-			// console.log(data.isuser);
-			setIsuser(data.isuser);
-            if (!(res.status === 200)) {
-                throw new Error(res.error);
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-	useEffect(()=>{
-		checkForUser();
-	}, [])
-
-    useEffect(() => {
-        if (props.isLogout==="1") {
-            // props.setIsLogout("0")
-            window.location.reload();
-        }
-    }, [props.isLogout])
+const Home = () => {
+	const { isAuthenticated } = useAuth();
 
     return (
         <>
         <BrowserView>
-        <div>
+        <div className="home-page">
 
-            <nav className="navbar navbar-expand-lg navbar-dark fixed-top">
+            <nav className="navbar navbar-expand-lg navbar-dark fixed-top home-nav">
                 <div className="container">
                     <NavLink exact to="/" className="navbar-brand" href="#">SynCode</NavLink>
                     <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +61,7 @@ const Home = (props) => {
                             <li className="nav-item active">
                                 <NavLink className="nav-link my-link" to="/rooms">Room</NavLink>
                             </li>
-                            {Isuser==='0'
+                            {!isAuthenticated
                             ?
                             <li className="nav-item active">
                                 <NavLink className="nav-link my-link" to="/login">Sign In</NavLink>
@@ -74,7 +71,7 @@ const Home = (props) => {
                                 <NavLink className="nav-link my-link" to="/login">Sign In</NavLink>
                             </li>
                             }
-                            {Isuser==='0'
+                            {!isAuthenticated
                             ?
                             <li className="nav-item active">
                                 <NavLink className="nav-link my-link" to="/signup">Sign Up</NavLink>
@@ -84,7 +81,7 @@ const Home = (props) => {
                                 <NavLink className="nav-link my-link" to="/signup">Sign Up</NavLink>
                             </li>
                             }
-                            {Isuser==='0'
+                            {!isAuthenticated
                             ?
                             <li className="nav-item active" style={{display:"none"}}>
                                 <NavLink className="nav-link my-link" to="/logout">Logout</NavLink>
@@ -112,55 +109,84 @@ const Home = (props) => {
             </nav>
 
             <header className="headerClass">
-                <div className="container">
-                <div className="banner-text">
-                    <div className="text-area">
-                        <span>C</span>
-                        <span>O</span>
-                        <span>D</span>
-                        <span>E</span>&nbsp;
-                        <span>&</span>&nbsp;
-                        <span>D</span>
-                        <span>I</span>
-                        <span>S</span>
-                        <span>C</span>
-                        <span>U</span>
-                        <span>S</span>
-                        <span>S</span>
-                       
+                <div className="container home-container">
+                    <section className="home-overview">
+                        <div className="home-hero">
+                            <p className="home-kicker">SynCode</p>
+                            <h1>Real-Time Collaborative Coding</h1>
+                            <p className="home-tagline">Code Together. Build Faster.</p>
+                            <p className="home-subheading">
+                                Write, compile and discuss code with your teammates in one shared workspace powered by real-time synchronization and integrated AI assistance.
+                            </p>
+                            <div className="home-actions">
+                                <Link to={isAuthenticated ? "/rooms" : "/login"} className="home-btn home-btn-primary">Start Coding</Link>
+                                <Link to="/rooms" className="home-btn home-btn-secondary">Join a Room</Link>
+                            </div>
+                        </div>
+
+                        <aside className="home-status-panel" aria-label="SynCode workspace summary">
+                            <div className="home-status-header">
+                                <span>Workspace flow</span>
+                                <span className="home-status-dot">Live</span>
+                            </div>
+                            <ol className="home-workflow">
+                                {workflowItems.map((item) => (
+                                    <li key={item}>{item}</li>
+                                ))}
+                            </ol>
+                            <div className="home-status-note">
+                                Built for interviews, pair programming, college projects and hackathon teams.
+                            </div>
+                        </aside>
+                    </section>
+
+                    <section className="home-main-grid">
+                        <div className="home-section-block">
+                            <div className="home-section-heading">
+                                <span>Core tools</span>
+                                <p>Everything needed for a focused coding session.</p>
+                            </div>
+                            <div className="home-features">
+                                {features.map((feature) => (
+                                    <article className="home-feature" key={feature.title}>
+                                        <div className="home-feature-icon">{feature.icon}</div>
+                                        <div>
+                                            <h2>{feature.title}</h2>
+                                            <p>{feature.text}</p>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="home-panel">
+                            <span className="home-section-label">Why SynCode</span>
+                            <p>
+                                SynCode combines collaborative editing, team communication and online code execution into one focused workspace. It keeps everyone on the same file, the same discussion and the same output without switching tools.
+                            </p>
+                        </div>
+
+                        <div className="home-panel">
+                            <span className="home-section-label">Who is it for?</span>
+                            <div className="home-audience-grid">
+                                {audiences.map((audience) => (
+                                    <div className="home-audience-card" key={audience}>{audience}</div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    <footer className="home-footer">
+                        <div className="home-footer-links">
+                            <a href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
+                            <a href="https://linkedin.com" target="_blank" rel="noreferrer">LinkedIn</a>
+                            <a href="mailto:contact@example.com">Contact</a>
+                            <span>Version 1.0</span>
+                        </div>
+                        <p>Made by Atul Kumar</p>
+                    </footer>
                     </div>
-
-                    <p>
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
-                     when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap 
-                    </p>
-
-                    <p className="banner-btn">
-                        {Isuser==='0'
-                        ?
-                            <Link to="/login" className="active mr-1">Login</Link> 
-                        :
-                            <Link to="/login" className="active mr-1" style={{display:"none"}}>Login</Link> 
-
-                        }
-                        {/* <Link to="/login" className="active mr-1">Login</Link>  */}
-                        {Isuser==='0'
-                        ?
-                            <Link to="/rooms" title="Sign In to access room">Room</Link> 
-                        :
-                            <Link to="/rooms">Room</Link>
-
-                        }
-                        {/* <Link to="/rooms">Room</Link> */}
-                    </p>
-                    </div>
-                </div>
             </header>
-            {/*
-            <Link to="/login"><h1>Login</h1></Link>
-            <Link to="/signup"><h1>Sign up</h1></Link>
-            <Link to="/rooms"><h1>Room</h1></Link>
-            */}
         </div>
         </BrowserView>
         <MobileView>

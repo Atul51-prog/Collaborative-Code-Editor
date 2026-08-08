@@ -5,6 +5,10 @@ const authenticate = async (req, res, next) => {
     try {
         console.log(req.cookies);
         const token = req.cookies.jwtToken;
+        if (!token) {
+            return res.status(401).send({error: "No token provided"});
+        }
+
         const verificationResult = await jwt.verify(token, process.env.SECRET_KEY);
 
         const rootUser = await User.findOne({_id: verificationResult._id, "tokens.token": token});
@@ -20,7 +24,8 @@ const authenticate = async (req, res, next) => {
         next();
 
     } catch (error) {
-        res.status(401).send({error: "No token provided"});
+        res.clearCookie('jwtToken', { path: '/' });
+        res.status(401).send({error: "Invalid or expired token"});
         console.log(error);
     }
 }

@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
 
-const DB = process.env.DATABASE;
+const DB = process.env.DATABASE || 'mongodb://127.0.0.1:27017/collaborative-editor';
 
-mongoose.connect(DB, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false
-}).then(()=>{
+mongoose.connect(DB)
+  .then(() => {
     console.log('Connection Successful');
-}).catch((err)=>console.log(err));
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err.message);
+  });
