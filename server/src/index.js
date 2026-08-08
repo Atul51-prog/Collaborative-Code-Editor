@@ -243,6 +243,6 @@ httpServer.on('error', (err) => {
     process.exit(1);
 });
 
-httpServer.listen(PORT, () => {
-    console.log(`port ${PORT}`);
+httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
 });

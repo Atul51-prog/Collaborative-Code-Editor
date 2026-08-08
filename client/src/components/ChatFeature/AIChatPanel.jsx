@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import './AIChatPanel.css';
 
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 const AIChatPanel = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -18,14 +21,30 @@ const AIChatPanel = () => {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
+
     const prompt = input.trim();
-    setMessages((prev) => [...prev, { role: 'user', text: prompt }]);
+
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', text: prompt }
+    ]);
+
     setInput('');
     setLoading(true);
 
     try {
-      const response = await axios.post('/ai', { prompt });
-      setMessages((prev) => [...prev, { role: 'assistant', text: response.data.reply }]);
+      const response = await axios.post(
+        `${BACKEND_URL}/ai`,
+        { prompt }
+      );
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          text: response.data.reply
+        }
+      ]);
     } catch (error) {
       const message =
         error.response?.data?.error ||
@@ -34,7 +53,10 @@ const AIChatPanel = () => {
 
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', text: message }
+        {
+          role: 'assistant',
+          text: message
+        }
       ]);
     } finally {
       setLoading(false);
@@ -43,12 +65,15 @@ const AIChatPanel = () => {
 
   return (
     <div className="ai-chat-panel">
-      <div className="ai-chat-panel-header">AI Assistant</div>
+      <div className="ai-chat-panel-title">
+        AI Assistant
+      </div>
 
       <div className="ai-chat-panel-messages">
         {messages.length === 0 && (
           <div className="ai-chat-panel-empty">
-            Ask questions about your code or project. Try asking for explanations, refactoring suggestions, or debugging help.
+            Ask questions about your code or project. Try asking
+            for explanations, refactoring suggestions, or debugging help.
           </div>
         )}
 
@@ -57,11 +82,18 @@ const AIChatPanel = () => {
             <div className={`ai-message-label ${msg.role}`}>
               {msg.role === 'user' ? 'You' : 'Assistant'}
             </div>
-            <div className="ai-message-text">{msg.text}</div>
+
+            <div className="ai-message-text">
+              {msg.text}
+            </div>
           </div>
         ))}
 
-        {loading && <div className="ai-chat-panel-loading">Thinking…</div>}
+        {loading && (
+          <div className="ai-chat-panel-loading">
+            Thinking…
+          </div>
+        )}
 
         <div ref={messagesEndRef} />
       </div>
@@ -72,10 +104,15 @@ const AIChatPanel = () => {
             className="ai-chat-panel-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+            onKeyDown={(e) =>
+              e.key === 'Enter' &&
+              !e.shiftKey &&
+              sendMessage()
+            }
             placeholder="Ask a question (Shift+Enter for new line)"
             disabled={loading}
           />
+
           <button
             className="ai-chat-panel-button"
             onClick={sendMessage}

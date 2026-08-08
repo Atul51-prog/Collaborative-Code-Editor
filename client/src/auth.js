@@ -1,6 +1,15 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 const AuthContext = createContext(null);
+
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -8,7 +17,7 @@ export const AuthProvider = ({ children }) => {
 
   const refreshAuth = useCallback(async () => {
     try {
-      const res = await fetch('/checkforUser', {
+      const res = await fetch(`${BACKEND_URL}/checkforUser`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -28,6 +37,7 @@ export const AuthProvider = ({ children }) => {
 
       const data = await res.json();
       setUser(data.user || null);
+
       return data.user || null;
     } catch (error) {
       console.log(error);
@@ -43,7 +53,7 @@ export const AuthProvider = ({ children }) => {
   }, [refreshAuth]);
 
   const login = useCallback(async ({ userName, password }) => {
-    const res = await fetch('/login', {
+    const res = await fetch(`${BACKEND_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -63,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch('/logout', {
+    await fetch(`${BACKEND_URL}/logout`, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -71,12 +81,22 @@ export const AuthProvider = ({ children }) => {
       },
       credentials: 'include',
     });
+
     setUser(null);
   }, []);
 
   return React.createElement(
     AuthContext.Provider,
-    { value: { user, initializing, isAuthenticated: Boolean(user), login, logout, refreshAuth } },
+    {
+      value: {
+        user,
+        initializing,
+        isAuthenticated: Boolean(user),
+        login,
+        logout,
+        refreshAuth,
+      },
+    },
     children
   );
 };
