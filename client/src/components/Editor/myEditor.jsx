@@ -21,6 +21,10 @@ import PublishRoundedIcon from '@material-ui/icons/PublishRounded';
 import ExitToAppRoundedIcon from '@material-ui/icons/ExitToAppRounded';
 import fileDownload from 'js-file-download'
 import PlayArrowRoundedIcon from '@material-ui/icons/PlayArrowRounded';
+import ChatRoundedIcon from '@material-ui/icons/ChatRounded';
+import SmartToyIcon from '@material-ui/icons/EmojiObjectsRounded';
+import AIChatPanel from '../ChatFeature/AIChatPanel';
+import './editor.css';
 
 const MyEditor = (props) => {
 
@@ -53,7 +57,8 @@ const MyEditor = (props) => {
 	const [currentUsers, setcurrentUsers] = useState('');
 	const [message, setMessage] = useState('');
 	const [messages, setMessages] = useState([]);
-	const [fontsize, setFontsize] = useState("16px")
+	const [fontsize, setFontsize] = useState(16)
+	const [activePanel, setActivePanel] = useState("chat")
 
 	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -124,16 +129,22 @@ const MyEditor = (props) => {
 	const editorRef = useRef()
 
 	// Called on initialization, adds ref
-	const handleEditorDidMount = (_, editor) => {
+	const handleEditorDidMount = (editor) => {
 		setIsEditorReady(true);
 		editorRef.current = editor
 	}
 
 	// Called whenever there is a change in the editor
-	const handleEditorChange = (value, event) => {
-		seteditorCode(value)
-		setcodeInRoom(value)
+	const handleEditorChange = (nextValue) => {
+		const code = nextValue ?? ""
+		setValue(code)
+		seteditorCode(code)
+		setcodeInRoom(code)
 	};
+
+	const togglePanel = (panel) => {
+		setActivePanel(current => current === panel ? null : panel)
+	}
 
 	// For theme of code editor
 	const toggleTheme = () => {
@@ -259,7 +270,7 @@ const MyEditor = (props) => {
 
 	const languages = ["cpp", "python", "javascript", "c", "java", "go"]
 	const languageExtension = ["cpp", "py", "js", "c", "java", "go"]
-	const fontSizes = ["10px", "12px", "14px", "16px", "18px", "20px", "22px", "24px", "26px", "28px", "30px"]
+	const fontSizes = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
 
 	const changeLanguage = (e) => {
 		setLanguage(languages[e.target.value])
@@ -325,7 +336,7 @@ const MyEditor = (props) => {
 
 	return (
 		<>
-			<BrowserView className="w-100">
+			<BrowserView className={`workspace ${theme === "vs-dark" ? "workspace-dark" : "workspace-light"}`}>
 				{!socket && (
 					<div style={{ padding: '2rem', textAlign: 'center' }}>Connecting to room...</div>
 				)}
@@ -333,7 +344,7 @@ const MyEditor = (props) => {
 				{socket && (
 				<>
 
-				<nav className="navbar navbar-expand-lg navbar-light bg-white shadow mb-1 py-0">
+				<nav className="navbar navbar-expand-lg workspace-navbar py-0">
 					<NavLink className="navbar-brand" to="/" onClick={leaveRoom}>SynCode</NavLink>
 					<button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 						<span className="navbar-toggler-icon"></span>
@@ -390,6 +401,28 @@ const MyEditor = (props) => {
 							</li>
 
 							<li className="nav-item">
+								<IconButton
+									color="primary"
+									className={activePanel === "chat" ? "panel-toggle-active" : ""}
+									onClick={() => togglePanel("chat")}
+									title="Toggle room chat panel"
+								>
+									<ChatRoundedIcon />
+								</IconButton>
+							</li>
+
+							<li className="nav-item">
+								<IconButton
+									color="primary"
+									className={activePanel === "ai" ? "panel-toggle-active" : ""}
+									onClick={() => togglePanel("ai")}
+									title="Toggle AI assistant panel"
+								>
+									<SmartToyIcon />
+								</IconButton>
+							</li>
+
+							<li className="nav-item">
 								<IconButton color="primary" onClick={copyRoomCode} title="Share the room code">
                                 	<ShareRoundedIcon />
                                 </IconButton>
@@ -439,29 +472,67 @@ const MyEditor = (props) => {
 					</div>
 				</nav>
 
-				<div className="d-flex">
-					<section className="mr-auto ml-1" style={{width:"68.5%"}}>
+				<div className="workspace-main">
+					<section className="workspace-editor">
 						<Editor
-							height="65vh"
+							height="100%"
 							width="100%"
 							theme={theme}
 							language={language}
+							path={`inmemory://syncode/room-${id}/code`}
 							value={value}
-							editorDidMount={handleEditorDidMount}
+							onMount={handleEditorDidMount}
 							onChange={handleEditorChange}
 							loading={"Loading..."}
-							options={{ fontSize: fontsize}}
+							options={{
+								fontSize: fontsize,
+								automaticLayout: true,
+								scrollBeyondLastLine: false,
+								smoothScrolling: true,
+								padding: { top: 8 },
+							}}
 						/>
 					</section>
-					<section className="ml-auto mr-1 d-flex" style={{width:"30.5%"}}>
-						<div className="mr-auto d-flex flex-column border border-warning" style={{ minWidth: "60vh", width:"100%", height: "65vh", backgroundColor: "white", borderRadius: "20px"}}>
-							<Messages messages={messages} nameOfUser={nameOfUser}>
-							</Messages>
-							<Input message={message} setMessage={setMessage} sendMessage={sendMessage}></Input>
-						</div>
-					</section>
 
+					{activePanel && (
+						<aside className="workspace-side-panel">
+							<div className="side-panel-tabs">
+								<button
+									type="button"
+									className={`side-panel-tab ${activePanel === "chat" ? "active" : ""}`}
+									onClick={() => setActivePanel("chat")}
+								>
+									Chat
+								</button>
+								<button
+									type="button"
+									className={`side-panel-tab ${activePanel === "ai" ? "active" : ""}`}
+									onClick={() => setActivePanel("ai")}
+								>
+									AI Chat
+								</button>
+								<button
+									type="button"
+									className="side-panel-close"
+									title="Close panel"
+									onClick={() => setActivePanel(null)}
+								>
+									×
+								</button>
+							</div>
 
+							<div className="side-panel-body">
+								{activePanel === "chat" ? (
+									<>
+										<Messages messages={messages} nameOfUser={nameOfUser} />
+										<Input message={message} setMessage={setMessage} sendMessage={sendMessage} />
+									</>
+								) : (
+									<AIChatPanel />
+								)}
+							</div>
+						</aside>
+					)}
 				</div>
 				</>
 				)}

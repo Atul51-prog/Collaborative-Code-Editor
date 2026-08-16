@@ -3,10 +3,10 @@ import MyEditor from './../Editor/myEditor';
 import Box from './../EditorBox/Box';
 import axios from "axios";
 import InputBox from './../EditorBox/InputBox';
-import AIChatPanel from './../ChatFeature/AIChatPanel';
 import { useSnackbar } from 'notistack';
 
 import 'react-reflex/styles.css'
+import './../Editor/editor.css'
 
 const Room = (props) => {
 
@@ -33,7 +33,7 @@ const Room = (props) => {
 	const [output, setoutput] = useState("");
 	const [codeInRoom, setcodeInRoom] = useState("");
 	const [stats, setstats] = useState("");
-	const [RoomFontSize, setRoomFontSize] = useState("");
+	const [RoomFontSize, setRoomFontSize] = useState(16);
 	const [RoomTheme, setRoomTheme] = useState("vs-dark");
 	const [isError, setisError] = useState(false)
 	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -99,8 +99,8 @@ const Room = (props) => {
 	}
 
 	return (
-		<div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-			<div className="d-flex" style={{ flex: 1 }}>
+		<div className={`workspace-shell ${RoomTheme === "vs-dark" ? "workspace-dark" : "workspace-light"}`}>
+			<div className="workspace-top">
 				<MyEditor
 					socket={socket}
 					nameOfUser={props.nameOfUser}
@@ -112,19 +112,16 @@ const Room = (props) => {
 				>
 				</MyEditor>
 			</div>
-			
-			<div className="d-flex" style={{ height: '200px', borderTop: '1px solid #e1e4e8' }}>
-				<div className="border mr-auto ml-1" style={{width:"33%", borderRight: '1px solid #e1e4e8'}}>
+
+			<div className="workspace-bottom">
+				<div className="workspace-bottom-cell">
 					<InputBox feature="Input" theme={RoomTheme} setProperty={setInput} fontSize={RoomFontSize}/>
 				</div>
-				<div className="border" style={{width:"33%", borderRight: '1px solid #e1e4e8'}}>
+				<div className="workspace-bottom-cell">
 					<Box feature={isError?"Error":"Output"} theme={RoomTheme} value={output} fontSize={RoomFontSize}/>
 				</div>
-				<div className="border" style={{width:"16%", borderRight: '1px solid #e1e4e8'}}>
+				<div className="workspace-bottom-cell">
 					<Box feature="Stats" theme={RoomTheme} value={stats} fontSize={RoomFontSize}/>
-				</div>
-				<div style={{width:"18%", display: 'flex', flexDirection: 'column', background: '#fff'}}>
-					<AIChatPanel />
 				</div>
 			</div>
 		</div>
