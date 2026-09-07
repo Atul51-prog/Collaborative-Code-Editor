@@ -19,8 +19,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import { useHistory, Link as RouterLink } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 
-const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || '';
+import { BACKEND_URL } from '../../config';
 
 function Copyright() {
   return (

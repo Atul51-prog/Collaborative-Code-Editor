@@ -15,8 +15,7 @@ import Container from '@material-ui/core/Container';
 import { useHistory } from 'react-router-dom';
 import './signup.css';
 
-const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || '';
+import { BACKEND_URL } from './../../config';
 
 function Copyright() {
   return (

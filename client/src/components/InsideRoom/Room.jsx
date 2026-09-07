@@ -8,8 +8,7 @@ import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
 
 import 'react-reflex/styles.css'
 
-const BACKEND_URL =
-	import.meta.env.VITE_BACKEND_URL || '';
+import { BACKEND_URL } from './../../config';
 
 const Room = (props) => {
 

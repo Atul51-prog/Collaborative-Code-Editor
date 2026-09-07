@@ -8,8 +8,7 @@ import React, {
 
 const AuthContext = createContext(null);
 
-const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || '';
+import { BACKEND_URL } from './config';
 
 const USER_STORAGE_KEY = 'syncode_user';
 const TOKEN_STORAGE_KEY = 'syncode_token';

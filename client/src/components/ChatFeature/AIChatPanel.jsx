@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import './AIChatPanel.css';
 
-const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || '';
+import { BACKEND_URL } from '../../config';
 
 const AIChatPanel = ({ roomId }) => {
   const storageKey = `syncode.aichat.${roomId || 'global'}`;

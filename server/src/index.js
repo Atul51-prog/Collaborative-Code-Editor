@@ -17,13 +17,21 @@ const allowedOrigins = [
   "http://localhost:5175",
   "http://localhost:5176",
   "http://localhost:5177",
+  "https://collaborative-code-editor-lyart.vercel.app",
 ];
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin) || origin === CLIENT_URL) return true;
+  if (typeof origin === 'string' && origin.includes('vercel.app')) return true;
+  return false;
+};
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin) || origin === CLIENT_URL) {
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -53,7 +61,7 @@ var removeRooms = []
 const io = require("socket.io")(httpServer, {
   cors: {
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || origin === CLIENT_URL) {
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by Socket.IO CORS"));

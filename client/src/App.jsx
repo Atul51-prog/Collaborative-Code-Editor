@@ -19,8 +19,7 @@ import Logout from './pages/Logout';
 import { AuthProvider, useAuth } from './auth';
 import ProtectedRoute from './ProtectedRoute';
 
-const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+import { BACKEND_URL } from './config';
 
 const AppRoutes = () => {
   const [socket, setSocket] = useState(null);
