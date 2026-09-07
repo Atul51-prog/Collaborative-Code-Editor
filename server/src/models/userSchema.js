@@ -35,18 +35,21 @@ const userSchema = new mongoose.Schema({
                 required: true
             }
         }
-    ]
+    ],
+    resetPasswordCode: {
+        type: String,
+        default: null
+    },
+    resetPasswordExpires: {
+        type: Date,
+        default: null
+    }
 });
 
-userSchema.pre('save', async function (next) {
-    console.log('outside');
+userSchema.pre('save', async function () {
     if (this.isModified('password')) {
-        console.log('inside');
-
         this.password = await bcrypt.hash(this.password, 12);
-        console.log(this.password);
     }
-    next();
 });
 
 userSchema.methods.generateAuthToken = async function(){

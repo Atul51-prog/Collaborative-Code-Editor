@@ -7,6 +7,7 @@ import {
 	BrowserView,
 	MobileView
 } from "react-device-detect";
+import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
 import { useHistory } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import IconButton from '@material-ui/core/IconButton';
@@ -16,11 +17,15 @@ import { RiCheckFill } from 'react-icons/ri';
 import ShareRoundedIcon from '@material-ui/icons/ShareRounded';
 import Messages from '../ChatFeature/Messages/Messages';
 import Input from '../ChatFeature/Input/Input';
+import AIChatPanel from '../ChatFeature/AIChatPanel';
 import GetAppRoundedIcon from '@material-ui/icons/GetAppRounded';
 import PublishRoundedIcon from '@material-ui/icons/PublishRounded';
 import ExitToAppRoundedIcon from '@material-ui/icons/ExitToAppRounded';
+import ChatBubbleOutlineRoundedIcon from '@material-ui/icons/ChatBubbleOutlineRounded';
+import CloseRoundedIcon from '@material-ui/icons/CloseRounded';
 import fileDownload from 'js-file-download'
 import PlayArrowRoundedIcon from '@material-ui/icons/PlayArrowRounded';
+import './editor.css';
 
 const MyEditor = (props) => {
 
@@ -54,11 +59,15 @@ const MyEditor = (props) => {
 	const [message, setMessage] = useState('');
 	const [messages, setMessages] = useState([]);
 	const [fontsize, setFontsize] = useState("16px")
+	const [activeSidePanel, setActiveSidePanel] = useState(null)
 
 	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
 	let { id } = useParams();
 	const roomStorageKey = `syncode.room.${id}`;
+
+	// Maps language name → select index (must match the options order)
+	const languageIndexMap = { cpp: 0, python: 1, javascript: 2, c: 3, java: 4, go: 5 };
 
 	useEffect(() => {
 		const storedRoom = localStorage.getItem(roomStorageKey);
@@ -84,6 +93,8 @@ const MyEditor = (props) => {
 			if (roomState.language) {
 				setLanguage(roomState.language);
 				setlanguageInRoom(roomState.language);
+				const idx = languageIndexMap[roomState.language];
+				if (idx !== undefined) setfileExtensionValue(idx);
 			}
 		} catch (error) {
 			console.log(error);
@@ -124,15 +135,21 @@ const MyEditor = (props) => {
 	const editorRef = useRef()
 
 	// Called on initialization, adds ref
-	const handleEditorDidMount = (_, editor) => {
+	const handleEditorDidMount = (editor, monaco) => {
 		setIsEditorReady(true);
-		editorRef.current = editor
+		editorRef.current = editor;
+	}
+
+	const toggleSidePanel = (panelName) => {
+		setActiveSidePanel((current) => (current === panelName ? null : panelName));
 	}
 
 	// Called whenever there is a change in the editor
 	const handleEditorChange = (value, event) => {
-		seteditorCode(value)
-		setcodeInRoom(value)
+		const nextCode = value || '';
+		setValue(nextCode)
+		seteditorCode(nextCode)
+		setcodeInRoom(nextCode)
 	};
 
 	// For theme of code editor
@@ -200,6 +217,8 @@ const MyEditor = (props) => {
 		const handleLanguageUpdate = (data) => {
 			setLanguage(data)
 			setlanguageInRoom(data)
+			const idx = languageIndexMap[data];
+			if (idx !== undefined) setfileExtensionValue(idx);
 		}
 
 		const handleTitleUpdate = (data) => {
@@ -218,6 +237,8 @@ const MyEditor = (props) => {
 			setTitleInfo(data.title)
 			setLanguage(data.language)
 			setlanguageInRoom(data.language)
+			const idx = languageIndexMap[data.language];
+			if (idx !== undefined) setfileExtensionValue(idx);
 			setValue(data.code)
 			setcodeInRoom(data.code)
 		}
@@ -332,20 +353,18 @@ const MyEditor = (props) => {
 
 				{socket && (
 				<>
-
-				<nav className="navbar navbar-expand-lg navbar-light bg-white shadow mb-1 py-0">
-					<NavLink className="navbar-brand" to="/" onClick={leaveRoom}>SynCode</NavLink>
+				<nav className="navbar navbar-expand-lg syncode-editor-nav mb-2 py-0">
+					<NavLink className="navbar-brand syncode-brand" to="/" onClick={leaveRoom}>SynCode</NavLink>
 					<button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 						<span className="navbar-toggler-icon"></span>
 					</button>
-					<form className="d-flex">
-						<input className="form-control me-2" type="text" placeholder="Enter file name here" aria-label="Search" value={titleInfo} onChange={titleUpdating} />
+					<form className="d-flex" onSubmit={(e) => { e.preventDefault(); titleUpdated(); }}>
+						<input className="form-control me-2 syncode-title-input" type="text" placeholder="Enter file name here" aria-label="Search" value={titleInfo} onChange={titleUpdating} />
 						{titleChange === true &&
-							<button className="btn ml-2 btn-outline-success">
+							<button type="button" className="btn ml-2 btn-outline-success" onClick={titleUpdated} disabled={!isEditorReady} title="Save file name">
 								<IconContext.Provider value={{size:"1.4em"}}>
-										<RiCheckFill className="checkIcon" onClick={titleUpdated} disabled={!isEditorReady}></RiCheckFill>
+									<RiCheckFill className="checkIcon"></RiCheckFill>
 								</IconContext.Provider>
-
 							</button>
 						}
 					</form>
@@ -353,7 +372,12 @@ const MyEditor = (props) => {
 						<ul className="navbar-nav ml-auto">
 							
 							<li className="nav-item">
-								<IconButton color="primary" title="Run code" onClick={props.runcode}>
+								<IconButton
+									color="primary"
+									title={props.isRunning ? "Running code..." : "Run code"}
+									disabled={Boolean(props.isRunning)}
+									onClick={props.runcode}
+								>
 									<PlayArrowRoundedIcon/>
                                 </IconButton>
 							</li>
@@ -367,7 +391,6 @@ const MyEditor = (props) => {
 								<IconButton color="primary" title="Upload the code" onClick={handleUpload}>
 									<PublishRoundedIcon/>
                                 </IconButton>
-								{/* <input type="file" onChange={(e) => showFile(e)}></input> */}
 								<input
 									type="file"
 									ref={hiddenFileInput}
@@ -393,17 +416,36 @@ const MyEditor = (props) => {
 								<IconButton color="primary" onClick={copyRoomCode} title="Share the room code">
                                 	<ShareRoundedIcon />
                                 </IconButton>
-								{/* <span className="nav-link">{id}</span> */}
+							</li>
+							<li className="nav-item">
+								<button
+									type="button"
+									className={`syncode-nav-action ${activeSidePanel === "chat" ? "active" : ""}`}
+									onClick={() => toggleSidePanel("chat")}
+									title="Toggle Room Chat"
+								>
+									<ChatBubbleOutlineRoundedIcon fontSize="small" />
+									<span>Chat</span>
+								</button>
 							</li>
 
-							
+							<li className="nav-item">
+								<button
+									type="button"
+									className={`syncode-nav-action ${activeSidePanel === "ai" ? "active" : ""}`}
+									onClick={() => toggleSidePanel("ai")}
+									title="Toggle AI Assistant"
+								>
+									<span>AI Chat</span>
+								</button>
+							</li>
 
 							<li className="nav-item">
-								<span className="nav-link mt-1">Participants: {users}</span>
+								<span className="nav-link mt-1 syncode-participants">Participants: {users}</span>
 							</li>
 
 							<li className="nav-item mr-2">
-								<select className="custom-select mt-1" title="change font size" defaultValue="3" onChange={changeFontSize}>
+								<select className="custom-select mt-1 syncode-select" title="change font size" defaultValue="3" onChange={changeFontSize}>
 									<option value="0">10px</option>
 									<option value="1">12px</option>
 									<option value="2">14px</option>
@@ -419,7 +461,12 @@ const MyEditor = (props) => {
 							</li>
 							
 							<li className="nav-item">
-								<select className="custom-select mt-1" title="Select Language" onChange={changeLanguage}>
+								<select
+									className="custom-select mt-1 syncode-select"
+									title="Select Language"
+									value={fileExtensionValue}
+									onChange={changeLanguage}
+								>
 									<option value="0">C++</option>
 									<option value="1">Python</option>
 									<option value="2">Javascript</option>
@@ -439,39 +486,72 @@ const MyEditor = (props) => {
 					</div>
 				</nav>
 
-				<div className="d-flex">
-					<section className="mr-auto ml-1" style={{width:"68.5%"}}>
+				<div className="syncode-main-row">
+					<div className="syncode-editor-wrapper">
 						<Editor
-							height="65vh"
+							height="100%"
 							width="100%"
 							theme={theme}
 							language={language}
 							value={value}
-							editorDidMount={handleEditorDidMount}
+							onMount={handleEditorDidMount}
 							onChange={handleEditorChange}
-							loading={"Loading..."}
-							options={{ fontSize: fontsize}}
+							loading={<div className="syncode-editor-loading">Loading editor...</div>}
+							options={{
+								fontSize: fontsize,
+								minimap: { enabled: false },
+								scrollBeyondLastLine: false,
+								automaticLayout: true,
+								tabSize: 4,
+								wordWrap: 'on',
+								suggestOnTriggerCharacters: true,
+								quickSuggestions: true,
+							}}
 						/>
-					</section>
-					<section className="ml-auto mr-1 d-flex" style={{width:"30.5%"}}>
-						<div className="mr-auto d-flex flex-column border border-warning" style={{ minWidth: "60vh", width:"100%", height: "65vh", backgroundColor: "white", borderRadius: "20px"}}>
-							<Messages messages={messages} nameOfUser={nameOfUser}>
-							</Messages>
-							<Input message={message} setMessage={setMessage} sendMessage={sendMessage}></Input>
-						</div>
-					</section>
+					</div>
 
+					{activeSidePanel && (
+						<aside className="syncode-docked-panel" aria-label="Side Panel">
+							<div className="syncode-docked-card">
+								<div className="syncode-docked-header">
+									<div className="syncode-docked-title">
+										{activeSidePanel === "chat" ? (
+											<>
+												<ChatBubbleOutlineRoundedIcon fontSize="small" />
+												<span>Room Chat</span>
+											</>
+										) : (
+											<>
+												<span className="syncode-ai-sparkle">✦</span>
+												<span>AI Assistant</span>
+											</>
+										)}
+									</div>
+									<div className="syncode-docked-actions">
+										{activeSidePanel === "chat" && <span className="syncode-online-badge">● Live</span>}
+										<IconButton size="small" onClick={() => setActiveSidePanel(null)} title="Close panel">
+											<CloseRoundedIcon fontSize="small" />
+										</IconButton>
+									</div>
+								</div>
 
+								<div className="syncode-docked-body">
+									{activeSidePanel === "chat" ? (
+										<div className="syncode-chat-container">
+											<Messages messages={messages} nameOfUser={nameOfUser} />
+											<Input message={message} setMessage={setMessage} sendMessage={sendMessage} />
+										</div>
+									) : (
+										<AIChatPanel roomId={id} />
+									)}
+								</div>
+							</div>
+						</aside>
+					)}
 				</div>
 				</>
 				)}
 			</BrowserView>
-			<MobileView>
-				<div className="mobile-notValid text-center" style={{position:'absolute', top:"50%", left:"50%", transform:'translate(-50%, -50%)'}}>
-					<h1>Dear user, unfortunately this app is not supported in MobileView.</h1>
-					<h1>Kindly use on a Desktop.</h1>
-				</div>
-			</MobileView>
 		</>
 	);
 

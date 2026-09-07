@@ -3,10 +3,20 @@ import axios from 'axios';
 import './AIChatPanel.css';
 
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  import.meta.env.VITE_BACKEND_URL || '';
 
-const AIChatPanel = () => {
-  const [messages, setMessages] = useState([]);
+const AIChatPanel = ({ roomId }) => {
+  const storageKey = `syncode.aichat.${roomId || 'global'}`;
+
+  const [messages, setMessages] = useState(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -18,6 +28,34 @@ const AIChatPanel = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading]);
+
+  // Persist messages to localStorage whenever they update
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+    } catch (e) {
+      console.warn('Failed to save AI chat to localStorage:', e);
+    }
+  }, [messages, storageKey]);
+
+  // If roomId changes, load corresponding history
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      setMessages(stored ? JSON.parse(stored) : []);
+    } catch {
+      setMessages([]);
+    }
+  }, [storageKey]);
+
+  const clearHistory = () => {
+    setMessages([]);
+    try {
+      localStorage.removeItem(storageKey);
+    } catch (e) {
+      console.warn('Failed to clear AI chat from localStorage:', e);
+    }
+  };
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -33,9 +71,13 @@ const AIChatPanel = () => {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem('syncode_token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
       const response = await axios.post(
         `${BACKEND_URL}/ai`,
-        { prompt }
+        { prompt },
+        { headers }
       );
 
       setMessages((prev) => [
@@ -69,6 +111,20 @@ const AIChatPanel = () => {
         AI Assistant
       </div>
 
+      {messages.length > 0 && (
+        <div className="ai-chat-panel-toolbar">
+          <span className="ai-chat-status-text">History saved</span>
+          <button
+            type="button"
+            className="ai-chat-clear-btn"
+            onClick={clearHistory}
+            title="Clear AI chat history"
+          >
+            Clear chat
+          </button>
+        </div>
+      )}
+
       <div className="ai-chat-panel-messages">
         {messages.length === 0 && (
           <div className="ai-chat-panel-empty">
@@ -91,7 +147,7 @@ const AIChatPanel = () => {
 
         {loading && (
           <div className="ai-chat-panel-loading">
-            Thinking…
+            Thinking...
           </div>
         )}
 
@@ -118,7 +174,7 @@ const AIChatPanel = () => {
             onClick={sendMessage}
             disabled={loading || !input.trim()}
           >
-            {loading ? '…' : 'Send'}
+            {loading ? '...' : 'Send'}
           </button>
         </div>
       </div>

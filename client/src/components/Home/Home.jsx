@@ -1,202 +1,165 @@
-import React from 'react'
-import { Link } from 'react-router-dom';
-import './Home.css';
-import { NavLink } from 'react-router-dom';
-import {
-	BrowserView,
-	MobileView
-} from "react-device-detect";
+import React from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import { BrowserView, MobileView } from 'react-device-detect';
 import { useAuth } from '../../auth';
+import CodeRoundedIcon from '@material-ui/icons/CodeRounded';
+import ArrowForwardRoundedIcon from '@material-ui/icons/ArrowForwardRounded';
 import GroupWorkOutlinedIcon from '@material-ui/icons/GroupWorkOutlined';
-import AssistantOutlinedIcon from '@material-ui/icons/AssistantOutlined';
-import CodeOutlinedIcon from '@material-ui/icons/CodeOutlined';
-import ForumOutlinedIcon from '@material-ui/icons/ForumOutlined';
-
-const features = [
-    {
-        icon: <GroupWorkOutlinedIcon />,
-        title: 'Real-Time Collaboration',
-        text: 'Multiple developers can edit the same file simultaneously with live cursor tracking.',
-    },
-    {
-        icon: <AssistantOutlinedIcon />,
-        title: 'Integrated AI Assistant',
-        text: 'Ask coding questions, generate code, explain logic and debug errors without leaving the workspace.',
-    },
-    {
-        icon: <CodeOutlinedIcon />,
-        title: 'Built-in Compiler',
-        text: 'Run code instantly and view output inside the browser.',
-    },
-    {
-        icon: <ForumOutlinedIcon />,
-        title: 'Team Communication',
-        text: 'Share ideas through live messaging while writing code.',
-    },
-];
-
-const audiences = ['Students', 'Interview Preparation', 'Developers', 'Hackathon Teams'];
-const workflowItems = ['Create a room', 'Invite collaborators', 'Write and run code', 'Discuss changes'];
+import PlayCircleOutlineRoundedIcon from '@material-ui/icons/PlayCircleOutlineRounded';
+import ChatBubbleOutlineRoundedIcon from '@material-ui/icons/ChatBubbleOutlineRounded';
+import './Home.css';
 
 const Home = () => {
-	const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user, logout } = useAuth();
 
     return (
         <>
-        <BrowserView>
-        <div className="home-page">
+            <BrowserView>
+                <div className="home-wrapper">
+                    {/* Top Navigation */}
+                    <nav className="navbar navbar-expand-lg home-navbar">
+                        <div className="container home-nav-container">
+                            <NavLink exact to="/" className="home-brand">
+                                <CodeRoundedIcon className="mr-2" style={{ color: '#3b82f6', fontSize: '1.5rem' }} />
+                                <span>SynCode</span>
+                            </NavLink>
 
-            <nav className="navbar navbar-expand-lg navbar-dark fixed-top home-nav">
-                <div className="container">
-                    <NavLink exact to="/" className="navbar-brand" href="#">SynCode</NavLink>
-                    <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                        <span className="navbar-toggler-icon"></span>
-                    </button>
-
-                    <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul className="navbar-nav ml-auto">
-                            <li className="nav-item active">
-                                <NavLink className="nav-link my-link" to="/">Home</NavLink>
-                            </li>
-                            <li className="nav-item active">
-                                <NavLink className="nav-link my-link" to="/rooms">Room</NavLink>
-                            </li>
-                            {!isAuthenticated
-                            ?
-                            <li className="nav-item active">
-                                <NavLink className="nav-link my-link" to="/login">Sign In</NavLink>
-                            </li>
-                            :
-                            <li className="nav-item active" style={{display:"none"}}>
-                                <NavLink className="nav-link my-link" to="/login">Sign In</NavLink>
-                            </li>
-                            }
-                            {!isAuthenticated
-                            ?
-                            <li className="nav-item active">
-                                <NavLink className="nav-link my-link" to="/signup">Sign Up</NavLink>
-                            </li>
-                            :
-                            <li className="nav-item active" style={{display:"none"}}>
-                                <NavLink className="nav-link my-link" to="/signup">Sign Up</NavLink>
-                            </li>
-                            }
-                            {!isAuthenticated
-                            ?
-                            <li className="nav-item active" style={{display:"none"}}>
-                                <NavLink className="nav-link my-link" to="/logout">Logout</NavLink>
-                            </li>
-                            :
-                            <li className="nav-item active">
-                                <NavLink className="nav-link my-link" to="/logout">Logout</NavLink>
-                            </li>
-                            }
-
-
-                            {/* <li className="nav-item active">
-                                <NavLink className="nav-link my-link" to="/login">Sign In</NavLink>
-                            </li>
-                            <li className="nav-item active">
-                                <NavLink className="nav-link my-link" to="/signup">Sign Up</NavLink>
-                            </li>
-                            <li className="nav-item active">
-                                <NavLink className="nav-link my-link" to="/logout">Logout</NavLink>
-                            </li> */}
-                        </ul>
-
-                    </div>
-                </div>
-            </nav>
-
-            <header className="headerClass">
-                <div className="container home-container">
-                    <section className="home-overview">
-                        <div className="home-hero">
-                            <p className="home-kicker">SynCode</p>
-                            <h1>Real-Time Collaborative Coding</h1>
-                            <p className="home-tagline">Code Together. Build Faster.</p>
-                            <p className="home-subheading">
-                                Write, compile and discuss code with your teammates in one shared workspace powered by real-time synchronization and integrated AI assistance.
-                            </p>
-                            <div className="home-actions">
-                                <Link to={isAuthenticated ? "/rooms" : "/login"} className="home-btn home-btn-primary">Start Coding</Link>
-                                <Link to="/rooms" className="home-btn home-btn-secondary">Join a Room</Link>
+                            <div className="d-flex align-items-center">
+                                <ul className="navbar-nav flex-row align-items-center">
+                                    <li className="nav-item mr-3">
+                                        <NavLink className="home-nav-link" to="/">Home</NavLink>
+                                    </li>
+                                    <li className="nav-item mr-3">
+                                        <NavLink className="home-nav-link" to="/rooms">Rooms</NavLink>
+                                    </li>
+                                    {!isAuthenticated ? (
+                                        <>
+                                            <li className="nav-item mr-2">
+                                                <NavLink className="home-nav-link" to="/login">Sign In</NavLink>
+                                            </li>
+                                            <li className="nav-item">
+                                                <Link to="/signup" className="btn home-signup-btn">
+                                                    Sign Up
+                                                </Link>
+                                            </li>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <li className="nav-item mr-2">
+                                                <span className="home-user-pill">
+                                                    <span className="home-user-dot" />
+                                                    {user?.userName || 'User'}
+                                                </span>
+                                            </li>
+                                            <li className="nav-item">
+                                                <button
+                                                    type="button"
+                                                    className="btn home-logout-btn"
+                                                    onClick={() => logout()}
+                                                >
+                                                    Logout
+                                                </button>
+                                            </li>
+                                        </>
+                                    )}
+                                </ul>
                             </div>
                         </div>
+                    </nav>
 
-                        <aside className="home-status-panel" aria-label="SynCode workspace summary">
-                            <div className="home-status-header">
-                                <span>Workspace flow</span>
-                                <span className="home-status-dot">Live</span>
+                    {/* Simple, Clean Centered Hero */}
+                    <header className="home-hero-section">
+                        <div className="container text-center">
+                            <div className="home-hero-content">
+                                <div className="home-hero-badge">
+                                    Online Pair Programming
+                                </div>
+                                <h1 className="home-hero-headline">
+                                    Real-time collaborative code editor.
+                                </h1>
+                                <p className="home-hero-subtext">
+                                    Create a shared room, invite peers or teammates, and write, compile, and run code together with live sync and chat.
+                                </p>
+                                <div className="home-hero-actions justify-content-center">
+                                    <Link to="/rooms" className="home-cta-primary">
+                                        {isAuthenticated ? "Go to Rooms" : "Start Coding"}
+                                        <ArrowForwardRoundedIcon className="ml-2" fontSize="small" />
+                                    </Link>
+                                    {!isAuthenticated && (
+                                        <Link to="/login" className="home-cta-secondary">
+                                            Sign In
+                                        </Link>
+                                    )}
+                                </div>
                             </div>
-                            <ol className="home-workflow">
-                                {workflowItems.map((item) => (
-                                    <li key={item}>{item}</li>
-                                ))}
-                            </ol>
-                            <div className="home-status-note">
-                                Built for interviews, pair programming, college projects and hackathon teams.
-                            </div>
-                        </aside>
-                    </section>
+                        </div>
+                    </header>
 
-                    <section className="home-main-grid">
-                        <div className="home-section-block">
-                            <div className="home-section-heading">
-                                <span>Core tools</span>
-                                <p>Everything needed for a focused coding session.</p>
-                            </div>
-                            <div className="home-features">
-                                {features.map((feature) => (
-                                    <article className="home-feature" key={feature.title}>
-                                        <div className="home-feature-icon">{feature.icon}</div>
-                                        <div>
-                                            <h2>{feature.title}</h2>
-                                            <p>{feature.text}</p>
+                    {/* Simple 3-Card Features */}
+                    <section className="home-features-section">
+                        <div className="container">
+                            <div className="row">
+                                <div className="col-md-4 mb-4 mb-md-0">
+                                    <div className="home-feature-card">
+                                        <div className="home-feature-icon">
+                                            <GroupWorkOutlinedIcon fontSize="medium" />
                                         </div>
-                                    </article>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="home-panel">
-                            <span className="home-section-label">Why SynCode</span>
-                            <p>
-                                SynCode combines collaborative editing, team communication and online code execution into one focused workspace. It keeps everyone on the same file, the same discussion and the same output without switching tools.
-                            </p>
-                        </div>
-
-                        <div className="home-panel">
-                            <span className="home-section-label">Who is it for?</span>
-                            <div className="home-audience-grid">
-                                {audiences.map((audience) => (
-                                    <div className="home-audience-card" key={audience}>{audience}</div>
-                                ))}
+                                        <h3 className="home-feature-title">Live Collaboration</h3>
+                                        <p className="home-feature-desc">
+                                            Multiple people edit the same code at the same time. Changes synchronize instantly across all devices.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="col-md-4 mb-4 mb-md-0">
+                                    <div className="home-feature-card">
+                                        <div className="home-feature-icon">
+                                            <PlayCircleOutlineRoundedIcon fontSize="medium" />
+                                        </div>
+                                        <h3 className="home-feature-title">Multi-Language Execution</h3>
+                                        <p className="home-feature-desc">
+                                            Write and execute C++, Python, JavaScript, Java, C, and Go directly in the browser with custom input.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="col-md-4">
+                                    <div className="home-feature-card">
+                                        <div className="home-feature-icon">
+                                            <ChatBubbleOutlineRoundedIcon fontSize="medium" />
+                                        </div>
+                                        <h3 className="home-feature-title">Team Chat & AI Help</h3>
+                                        <p className="home-feature-desc">
+                                            Discuss code in the room chat side-panel, or ask the built-in AI assistant for concise explanations.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </section>
 
+                    {/* Simple Footer */}
                     <footer className="home-footer">
-                        <div className="home-footer-links">
-                            <a href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
-                            <a href="https://linkedin.com" target="_blank" rel="noreferrer">LinkedIn</a>
-                            <a href="mailto:contact@example.com">Contact</a>
-                            <span>Version 1.0</span>
+                        <div className="container d-flex flex-wrap justify-content-between align-items-center">
+                            <div className="d-flex align-items-center">
+                                <CodeRoundedIcon className="mr-2" style={{ color: '#3b82f6', fontSize: '1.2rem' }} />
+                                <span className="font-weight-semibold text-light">SynCode</span>
+                            </div>
+                            <div className="home-footer-links">
+                                <Link to="/rooms" className="text-muted mr-3">Rooms</Link>
+                                <NavLink to="/" className="text-muted mr-3">Home</NavLink>
+                                <span className="text-muted">Simple Collaborative Coding</span>
+                            </div>
                         </div>
-                        <p>Made by Atul Kumar</p>
                     </footer>
-                    </div>
-            </header>
-        </div>
-        </BrowserView>
-        <MobileView>
-            <div className="mobile-notValid text-center" style={{position:'absolute', top:"50%", left:"50%", transform:'translate(-50%, -50%)'}}>
-				<h1>Dear user, unfortunately this app is not supported in MobileView.</h1>
-				<h1>Kindly use on a Desktop.</h1>
-			</div>
-        </MobileView>
+                </div>
+            </BrowserView>
+            <MobileView>
+                <div className="mobile-notValid text-center" style={{ position: 'absolute', top: "50%", left: "50%", transform: 'translate(-50%, -50%)' }}>
+                    <h1>Dear user, unfortunately this app is not supported in MobileView.</h1>
+                    <h1>Kindly use on a Desktop.</h1>
+                </div>
+            </MobileView>
         </>
-    )
-}
+    );
+};
 
-export default Home
+export default Home;

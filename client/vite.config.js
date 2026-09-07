@@ -15,6 +15,9 @@ export default defineConfig({
       '/logout': 'http://localhost:5000',
       '/ai': 'http://localhost:5000',
       '/execute': 'http://localhost:5000',
+      '/forgot-password': 'http://localhost:5000',
+      '/verify-reset-code': 'http://localhost:5000',
+      '/reset-password': 'http://localhost:5000',
     },
   },
 });

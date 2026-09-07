@@ -13,6 +13,7 @@ import { SnackbarProvider } from 'notistack';
 
 import CreateAccount from './pages/CreateAccount';
 import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import Logout from './pages/Logout';
 
 import { AuthProvider, useAuth } from './auth';
@@ -58,6 +59,10 @@ const AppRoutes = () => {
 
         <Route path="/login">
           <LoginPage />
+        </Route>
+
+        <Route path="/forgot-password">
+          <ForgotPasswordPage />
         </Route>
 
         <Route path="/signup">

@@ -208,27 +208,98 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-app.post('/execute', async (req, res)=>{
-    console.log(req.body);
-    const { script, language, stdin, versionIndex } = req.body;
+// In-memory execution cache to save JDoodle credits on repeated runs (TTL: 2 minutes)
+const executionCache = new Map();
+const EXECUTION_CACHE_TTL_MS = 2 * 60 * 1000;
 
-    const response = await axios({
-        method: "POST",
-        url: process.env.JDOODLE_URL,
-        data: {
-          script: script,
-          stdin: stdin,
-          language: language,
-          versionIndex: versionIndex,
-          clientId: process.env.JDOODLE_CLIENT_ID,
-          clientSecret: process.env.JDOODLE_CLIENT_SECRET
-        },
-        responseType: "json",
-      });
+app.post('/execute', async (req, res) => {
+    try {
+        const { script, language, stdin = '', versionIndex = '0' } = req.body;
 
-    console.log("RESPONSE from jdoodle--->" + response.data);
-    res.json(response.data);
-})
+        if (typeof script !== 'string') {
+            return res.status(400).json({ error: 'Script is required' });
+        }
+        if (!language) {
+            return res.status(400).json({ error: 'Language is required' });
+        }
+
+        let cleanStdin = "";
+        if (typeof stdin === "string") {
+            cleanStdin = stdin;
+        } else if (Array.isArray(stdin)) {
+            cleanStdin = stdin.join("\n");
+        } else if (stdin !== null && stdin !== undefined) {
+            cleanStdin = String(stdin);
+        }
+        cleanStdin = cleanStdin.replace(/\r\n/g, "\n");
+
+        console.log("BACKEND STDIN:", JSON.stringify(stdin));
+        console.log("JDOODLE STDIN:", JSON.stringify(cleanStdin));
+        console.log("CODE:", script);
+        console.log("LANGUAGE:", language);
+
+        // Check if identical code + stdin was recently executed
+        const cacheKey = `${language}:::${cleanStdin}:::${script}`;
+        const cached = executionCache.get(cacheKey);
+        if (cached && (Date.now() - cached.timestamp < EXECUTION_CACHE_TTL_MS)) {
+            console.log("[JDoodle Cache HIT] Returned cached output (Saved 1 JDoodle credit!)");
+            return res.json({
+                ...cached.data,
+                cached: true
+            });
+        }
+
+        const response = await axios({
+            method: "POST",
+            url: process.env.JDOODLE_URL || "https://api.jdoodle.com/v1/execute",
+            data: {
+                clientId: process.env.JDOODLE_CLIENT_ID,
+                clientSecret: process.env.JDOODLE_CLIENT_SECRET,
+                script: script,
+                language: language,
+                versionIndex: String(versionIndex ?? '0'),
+                stdin: cleanStdin,
+            },
+            responseType: "json",
+            timeout: 30000,
+        });
+
+        console.log("JDoodle response:", response.data);
+
+        // Cache successful response to avoid burning credits on accidental duplicate runs
+        if (response.status === 200 && response.data) {
+            executionCache.set(cacheKey, {
+                data: response.data,
+                timestamp: Date.now()
+            });
+            if (executionCache.size > 100) {
+                const oldestKey = executionCache.keys().next().value;
+                executionCache.delete(oldestKey);
+            }
+        }
+
+        res.json(response.data);
+    } catch (error) {
+        const errData = error.response?.data;
+        const errDetail = (errData && typeof errData === 'object')
+            ? JSON.stringify(errData)
+            : (errData || error.message || 'Execution error');
+        console.error("Execution error:", errDetail);
+
+        const status = error.response?.status || 500;
+        let message = error.response?.data?.error || error.response?.data?.message || error.message || 'Execution failed';
+        if (status === 429 || (typeof message === 'string' && message.toLowerCase().includes('limit'))) {
+            message = "JDoodle API rate or daily limit reached. Please wait a moment before running again.";
+        }
+
+        res.status(status).json({
+            error: message,
+            output: message,
+            statusCode: status,
+            isExecutionSuccess: false
+        });
+    }
+});
 
 console.log('Hello world from server IndexJS');
 removingRooms();

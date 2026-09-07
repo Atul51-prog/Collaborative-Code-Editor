@@ -1,29 +1,40 @@
 import React from 'react';
-import Editor from "@monaco-editor/react"
 
-const InputBox = (props) => {
+const InputBox = ({ feature, theme, setProperty, value, fontSize }) => {
+    const isDark = theme !== "light";
 
-    const handleEditorChange = (value, event) => {
-        console.log("here is the current model value:", value);
-        props.setProperty(value);
-    }
+    const handleInputChange = (e) => {
+        const newVal = e.target.value;
+        console.log("INPUT CHANGED:", JSON.stringify(newVal));
+        setProperty(newVal);
+    };
+
     return (
-        <>
-            <div className={(props.theme==="vs-dark")? "text-center bg-light" : "text-center bg-dark text-light"}>
-                <strong>{props.feature}</strong>
+        <div className="syncode-panel-card">
+            <div className="syncode-panel-header">
+                <span className="syncode-panel-tag">{feature}</span>
+                <span className="syncode-panel-hint">stdin</span>
             </div>
-            <section>
-            <Editor
-                defaultLanguage="plaintext"
-                height="21vh"
-                theme={props.theme}
-                defaultValue=""
-                onChange={handleEditorChange}
-                options={{ fontSize: props.fontSize}}
-            />
-            </section>
-        </>
-    )
-}
+            <div
+                className="syncode-panel-body"
+                style={{
+                    backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+                }}
+            >
+                <textarea
+                    className="syncode-panel-textarea"
+                    value={value ?? ''}
+                    onChange={handleInputChange}
+                    placeholder="Enter standard input (stdin) here..."
+                    spellCheck="false"
+                    style={{
+                        color: isDark ? '#d4d4d4' : '#1e1e1e',
+                        fontSize: fontSize || "13px",
+                    }}
+                />
+            </div>
+        </div>
+    );
+};
 
-export default InputBox
+export default InputBox;

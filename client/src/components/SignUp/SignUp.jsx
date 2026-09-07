@@ -16,7 +16,7 @@ import { useHistory } from 'react-router-dom';
 import './signup.css';
 
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  import.meta.env.VITE_BACKEND_URL || '';
 
 function Copyright() {
   return (

@@ -9,24 +9,54 @@ import React, {
 const AuthContext = createContext(null);
 
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  import.meta.env.VITE_BACKEND_URL || '';
+
+const USER_STORAGE_KEY = 'syncode_user';
+const TOKEN_STORAGE_KEY = 'syncode_token';
+
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem(USER_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+const getStoredToken = () => {
+  try {
+    return localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  } catch (e) {
+    return '';
+  }
+};
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState(() => getStoredUser());
+  const [initializing, setInitializing] = useState(() => !getStoredUser());
 
   const refreshAuth = useCallback(async () => {
+    const token = getStoredToken();
+
     try {
+      const headers = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${BACKEND_URL}/checkforUser`, {
         method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include',
       });
 
       if (res.status === 401) {
+        localStorage.removeItem(USER_STORAGE_KEY);
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
         setUser(null);
         return null;
       }
@@ -36,12 +66,22 @@ export const AuthProvider = ({ children }) => {
       }
 
       const data = await res.json();
-      setUser(data.user || null);
+      const verifiedUser = data.user || null;
 
-      return data.user || null;
+      if (verifiedUser) {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(verifiedUser));
+        setUser(verifiedUser);
+      }
+
+      return verifiedUser;
     } catch (error) {
-      console.log(error);
-      setUser(null);
+      console.log('Auth check note:', error.message || error);
+      // On network failure, retain offline cached user if token exists
+      const cached = getStoredUser();
+      if (cached && token) {
+        setUser(cached);
+        return cached;
+      }
       return null;
     } finally {
       setInitializing(false);
@@ -68,21 +108,41 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.error || 'Invalid credentials');
     }
 
+    if (data.token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
+    }
+
+    if (data.user) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+    }
+
     setUser(data.user);
     return data;
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch(`${BACKEND_URL}/logout`, {
-      method: 'GET',
-      headers: {
+    const token = getStoredToken();
+    try {
+      const headers = {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
-    setUser(null);
+      await fetch(`${BACKEND_URL}/logout`, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.log('Logout error:', error);
+    } finally {
+      localStorage.removeItem(USER_STORAGE_KEY);
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      setUser(null);
+    }
   }, []);
 
   return React.createElement(

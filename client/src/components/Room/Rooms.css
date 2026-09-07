@@ -1,25 +1,358 @@
-.roomsLink:hover{
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap');
+
+.rooms-wrapper {
+    position: relative;
+    min-height: 100vh;
+    width: 100vw;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-color: #0d1117;
+    color: #cccccc;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    overflow-x: hidden;
+}
+
+.rooms-backdrop-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(13, 17, 23, 0.75) 0%, rgba(10, 14, 20, 0.94) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ==========================================================================
+   Top Navigation
+   ========================================================================== */
+.syncode-top-nav {
+    position: relative;
+    z-index: 10;
+    height: 54px;
+    background: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #333333;
+    padding: 0 1rem;
+}
+
+.syncode-nav-brand {
+    display: flex;
+    align-items: center;
     color: #ffffff !important;
+    font-weight: 700;
+    font-size: 1.15rem;
+    text-decoration: none !important;
+    letter-spacing: 0.3px;
 }
 
-.roomsLink{
-    text-decoration: none;
-    display: inline-block;
+.syncode-nav-item {
+    color: #cccccc !important;
+    text-decoration: none !important;
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
-.roomsLink::after{
-    content: "";
-    display: block;
-    width: 0;
-    height: 2px;
-    background: #3498db;
-    transition: width 1s;
+.syncode-nav-item:hover {
+    color: #ffffff !important;
+    background: #37373d;
 }
-.banner-text h2{
-    font-family: 'Poppins', sans-serif;
-    color: #fff;
+
+.syncode-user-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 20px;
+    padding: 4px 12px;
+    color: #e0e0e0;
+    font-size: 0.84rem;
+    font-weight: 600;
 }
-.roomsLink:hover::after{
+
+.syncode-status-indicator {
+    width: 8px;
+    height: 8px;
+    background: #89d185;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(137, 209, 133, 0.6);
+}
+
+.syncode-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    background: transparent;
+    color: #e57373;
+    border: 1px solid rgba(229, 115, 115, 0.35);
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    transition: all 0.15s ease;
+}
+
+.syncode-logout-btn:hover {
+    background: rgba(229, 115, 115, 0.15);
+    color: #ff8a80;
+    border-color: #e57373;
+}
+
+/* ==========================================================================
+   Main Center Hub Card
+   ========================================================================== */
+.rooms-main-container {
+    position: relative;
+    z-index: 5;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.syncode-hub-card {
+    max-width: 640px;
     width: 100%;
-    transition: width 1s;
+    background: rgba(30, 30, 30, 0.88);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 36px 32px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    text-align: center;
+    animation: hubFadeUp 0.3s ease-out;
+}
+
+@keyframes hubFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.syncode-hub-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 122, 204, 0.15);
+    color: #4fc1ff;
+    border: 1px solid rgba(0, 122, 204, 0.35);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 18px;
+}
+
+.syncode-badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #007acc;
+    border-radius: 50%;
+}
+
+.syncode-hub-title {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 10px;
+    letter-spacing: -0.3px;
+}
+
+.syncode-hub-title .highlight {
+    color: #4fc1ff;
+}
+
+.syncode-typewriter-box {
+    font-size: 1.1rem;
+    color: #9cdcfe;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.syncode-hub-description {
+    color: #858585;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0 auto 28px;
+    max-width: 480px;
+}
+
+.syncode-hub-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.syncode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 22px;
+    border-radius: 6px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+    text-decoration: none !important;
+}
+
+.syncode-btn-primary {
+    background: #007acc;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(0, 122, 204, 0.35);
+}
+
+.syncode-btn-primary:hover {
+    background: #0062a3;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 122, 204, 0.45);
+}
+
+.syncode-btn-secondary {
+    background: #252526;
+    color: #cccccc;
+    border: 1px solid #3c3c3c;
+}
+
+.syncode-btn-secondary:hover {
+    background: #37373d;
+    color: #ffffff;
+    border-color: #555555;
+    transform: translateY(-1px);
+}
+
+.syncode-hub-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 20px;
+    flex-wrap: wrap;
+}
+
+.syncode-feature-chip {
+    display: flex;
+    align-items: center;
+    color: #858585;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.syncode-bullet {
+    color: #007acc;
+    font-size: 0.7rem;
+    margin-right: 6px;
+}
+
+/* ==========================================================================
+   Dark Modal for Join Room
+   ========================================================================== */
+.syncode-dark-modal {
+    background: #252526;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    color: #cccccc;
+}
+
+.syncode-modal-header {
+    border-bottom: 1px solid #333333;
+    background: #2d2d2d;
+    padding: 14px 20px;
+}
+
+.syncode-modal-title {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.syncode-modal-body {
+    padding: 20px;
+}
+
+.syncode-modal-help {
+    font-size: 0.85rem;
+    color: #858585;
+    margin-bottom: 12px;
+}
+
+.syncode-modal-input {
+    background: #1e1e1e !important;
+    border: 1px solid #3c3c3c !important;
+    color: #ffffff !important;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+}
+
+.syncode-modal-input:focus {
+    border-color: #007acc !important;
+    box-shadow: 0 0 0 1px #007acc !important;
+}
+
+.syncode-modal-footer {
+    border-top: 1px solid #333333;
+    background: #252526;
+    padding: 12px 20px;
+}
+
+.syncode-modal-btn-cancel {
+    background: #333333;
+    color: #cccccc;
+    border: 1px solid #3c3c3c;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.syncode-modal-btn-cancel:hover {
+    background: #3c3c3c;
+    color: #ffffff;
+}
+
+.syncode-modal-btn-join {
+    background: #007acc;
+    color: #ffffff;
+    border: 1px solid #007acc;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 16px;
+}
+
+.syncode-modal-btn-join:hover:not(:disabled) {
+    background: #0062a3;
+    color: #ffffff;
+}
+
+.syncode-modal-btn-join:disabled {
+    background: #3c3c3c;
+    border-color: #3c3c3c;
+    color: #6a6a6a;
+    cursor: not-allowed;
 }

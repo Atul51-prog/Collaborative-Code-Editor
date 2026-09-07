@@ -12,7 +12,7 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-import {useHistory} from 'react-router-dom'
+import { useHistory, Link as RouterLink } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { useAuth } from '../../auth';
 
@@ -20,7 +20,7 @@ function Copyright() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
       {'Copyright © '}
-      <Link color="inherit" href="/">
+      <Link component={RouterLink} color="inherit" to="/">
         SynCode
       </Link>{' '}
       {new Date().getFullYear()}
@@ -58,7 +58,7 @@ export default function Login() {
     const classes = useStyles();
     const { login } = useAuth();
 
-  	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  	const { enqueueSnackbar } = useSnackbar();
 
     const [passwordShown, setPasswordShown] = useState(false);
 
@@ -71,10 +71,9 @@ export default function Login() {
         password: ""
     });
 
-    let name, value;
     const handleInputs = (e) => {
-        name = e.target.name;
-        value = e.target.value;
+        const name = e.target.name;
+        const value = e.target.value;
         
         setUser({...user, [name]: value});
     }
@@ -90,7 +89,7 @@ export default function Login() {
           enqueueSnackbar('Logged in successfully', {
             variant: "success"
           })
-          console.log("Logged In Successfull");
+          console.log("Logged In Successful");
 
           history.push(history.location.state?.from?.pathname || "/");
         } catch (error) {
@@ -114,7 +113,7 @@ export default function Login() {
         <Typography component="h1" variant="h5">
           Sign in
         </Typography>
-        <form className={classes.form} noValidate>
+        <form className={classes.form} noValidate onSubmit={postDataLogin}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
@@ -155,14 +154,18 @@ export default function Login() {
             variant="contained"
             color="primary"
             className={classes.submit}
-            onClick={postDataLogin}
           >
             Sign In
           </Button>
-          <Grid container justify="flex-end">
-            <Grid item>
-              <Link href="/signup" variant="body2">
-                    Don't have an account? Sign Up
+          <Grid container spacing={1}>
+            <Grid item xs={12} sm={6}>
+              <Link component={RouterLink} to="/forgot-password" variant="body2" style={{ color: '#007acc' }}>
+                Forgot password?
+              </Link>
+            </Grid>
+            <Grid item xs={12} sm={6} style={{ textAlign: 'right' }}>
+              <Link component={RouterLink} to="/signup" variant="body2">
+                Don't have an account? Sign Up
               </Link>
             </Grid>
           </Grid>

@@ -1,25 +1,40 @@
 import React from 'react';
-import Editor from "@monaco-editor/react"
+import Editor from "@monaco-editor/react";
 
-const Box = (props) => {
+const Box = ({ feature, theme, value, fontSize }) => {
+    const isError = feature === "Error";
 
     return (
-        <>
-            <div className= {(props.theme==="vs-dark")? "text-center bg-light" : "text-center bg-dark text-light"}>
-                <strong>{props.feature}</strong>
+        <div className="syncode-panel-card">
+            <div className={`syncode-panel-header ${isError ? 'is-error-header' : ''}`}>
+                <span className="syncode-panel-tag">{feature}</span>
+                {isError && <span className="syncode-panel-badge error">Error</span>}
             </div>
-            <section>
-            <Editor
-                defaultLanguage="plaintext"
-                height="21vh"
-                theme={props.theme}
-                defaultValue=""
-                value={props.value}
-                options={{ fontSize: props.fontSize}}
-            />
-            </section>
-        </>
-    )
-}
+            <div className="syncode-panel-body">
+                <Editor
+                    defaultLanguage="plaintext"
+                    height="100%"
+                    width="100%"
+                    theme={theme}
+                    value={value || ''}
+                    options={{
+                        readOnly: true,
+                        domReadOnly: true,
+                        fontSize: fontSize || "13px",
+                        minimap: { enabled: false },
+                        automaticLayout: true,
+                        scrollBeyondLastLine: false,
+                        wordWrap: 'on',
+                        lineNumbers: 'off',
+                        glyphMargin: false,
+                        folding: false,
+                        lineDecorationsWidth: 6,
+                        renderLineHighlight: 'none',
+                    }}
+                />
+            </div>
+        </div>
+    );
+};
 
-export default Box
+export default Box;

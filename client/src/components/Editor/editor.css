@@ -1,153 +1,465 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap');
+
 body {
     margin: 0;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    background-color: #1e1e1e;
+    color: #cccccc;
 }
 
-.listButton-dark {
-    margin: 0;
-    background-color: #202124;
+/* ==========================================================================
+   Workspace Main Layout
+   ========================================================================== */
+.syncode-room-shell {
+    height: 100vh;
+    width: 100vw;
+    background: #1e1e1e;
+    color: #cccccc;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.syncode-room-shell .reflex-container {
+    height: 100%;
+    width: 100%;
+    background: #1e1e1e;
+}
+
+.syncode-workspace-element {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #1e1e1e;
+}
+
+.syncode-workspace-element > .w-100 {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   Top Navigation Bar (VS Code Title Bar Style)
+   ========================================================================== */
+.syncode-editor-nav {
+    min-height: 48px;
+    height: 48px;
+    padding: 0 12px !important;
+    background: #252526;
+    border-bottom: 1px solid #333333;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.syncode-brand {
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.2px;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none !important;
+}
+
+.syncode-title-input {
+    min-width: 240px;
+    max-width: 320px;
+    height: 32px;
+    color: #cccccc;
+    background: #3c3c3c;
+    border: 1px solid #454545;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    box-shadow: none;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.syncode-title-input:focus {
+    color: #ffffff;
+    background: #3c3c3c;
+    border-color: #007acc;
+    box-shadow: 0 0 0 1px #007acc;
+}
+
+.syncode-editor-nav .MuiIconButton-root {
+    color: #cccccc;
+    padding: 6px;
+    margin: 0 2px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.syncode-editor-nav .MuiIconButton-root:hover {
+    color: #ffffff;
+    background: #37373d;
+}
+
+.syncode-participants {
+    color: #858585 !important;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    padding: 4px 8px;
+}
+
+.syncode-select {
+    height: 32px;
+    color: #cccccc;
+    background-color: #3c3c3c;
+    border: 1px solid #454545;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.82rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.syncode-select:focus {
+    border-color: #007acc;
+    color: #ffffff;
+    background-color: #3c3c3c;
+    box-shadow: 0 0 0 1px #007acc;
+}
+
+.syncode-select option {
+    background-color: #252526;
+    color: #cccccc;
+}
+
+.syncode-nav-action {
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 4px;
+    padding: 0 10px;
+    color: #cccccc;
+    background: #333333;
+    border: 1px solid #454545;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.syncode-nav-action:hover {
+    color: #ffffff;
+    background: #3c3c3c;
+    border-color: #555555;
+}
+
+.syncode-nav-action.active {
+    color: #ffffff;
+    background: #007acc;
+    border-color: #007acc;
+}
+
+/* ==========================================================================
+   Editor & Docked Side Panel Area
+   ========================================================================== */
+.syncode-main-row {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    background: #1e1e1e;
     position: relative;
+    overflow: hidden;
 }
 
-.listButton-light {
-    margin: 0;
-    background-color: #FFFFFE;
+.syncode-editor-wrapper {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    background: #1e1e1e;
     position: relative;
+    overflow: hidden;
 }
 
-.language-name-dark {
-    padding-left: 1.5%;
-    color: white;
+.syncode-editor-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #858585;
+    font-size: 0.9rem;
 }
 
-.language-name-light {
-    padding-left: 1.5%;
-    color: dark;
+/* Docked Right Side Panel (VS Code Sidebar style) */
+.syncode-docked-panel {
+    width: 380px;
+    min-width: 280px;
+    max-width: 500px;
+    height: 100%;
+    flex-shrink: 0;
+    background: #252526;
+    border-left: 1px solid #333333;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10;
+    animation: dockedSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media only screen and (max-width: 780px) {
-    .title-doc {
-        visibility: hidden;
+@keyframes dockedSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0.7;
     }
-    .language-name-dark {
-        padding-left: 2.5%;
-        color: white;
-    }
-    .language-name-light {
-        padding-left: 2.5%;
-        color: dark;
+    to {
+        transform: translateX(0);
+        opacity: 1;
     }
 }
 
-.select-dark {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    -ms-appearance: none;
-    appearance: none;
-    outline: 0;
-    box-shadow: none;
-    border: 0!important;
-    background: #5c6664;
-    background-image: none;
-    padding: 0 .5em;
-    margin-left: 1.5%;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1em;
+.syncode-docked-card {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #252526;
 }
 
-.select-light {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    -ms-appearance: none;
-    appearance: none;
-    outline: 0;
-    box-shadow: none;
-    border: 0!important;
-    background: #f5e9e9;
-    background-image: none;
-    padding: 0 .5em;
-    margin-left: 1.5%;
-    color: black;
-    cursor: pointer;
-    font-size: 1em;
+.syncode-docked-header {
+    height: 38px;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    background: #2d2d2d;
+    border-bottom: 1px solid #333333;
+    color: #cccccc;
 }
 
-.select::-ms-expand {
-    display: none;
+.syncode-docked-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #e0e0e0;
 }
 
-.title-doc {
-    display: inline;
-    position: absolute;
-    left: 45%;
-    padding-top: 0.25%;
+.syncode-docked-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.input-dark {
-    margin-right: auto;
-    margin-left: auto;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    -ms-appearance: none;
-    appearance: none;
-    outline: 0;
-    box-shadow: none;
-    border: 0!important;
-    background: #202124;
-    background-image: none;
-    padding: 0 .5em;
-    margin-left: 0.5%;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1em;
+.syncode-docked-actions .MuiIconButton-root {
+    color: #858585;
+    padding: 4px;
+    border-radius: 4px;
 }
 
-.input-light {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    -ms-appearance: none;
-    appearance: none;
-    outline: 0;
-    box-shadow: none;
-    border: 0!important;
-    background: white;
-    background-image: none;
-    padding: 0 .5em;
-    margin-left: 0.5%;
-    color: black;
-    cursor: pointer;
-    font-size: 1em;
+.syncode-docked-actions .MuiIconButton-root:hover {
+    color: #ffffff;
+    background: #37373d;
 }
 
-.sunIcon {
-    color: white;
-    transform: scale(1.25);
-    margin-top: 0.25%;
-    margin-left: 1.5%;
-    cursor: pointer;
+.syncode-online-badge {
+    color: #89d185;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
 }
 
-.bulbIcon {
-    transform: scale(1.25);
-    margin-left: 1.5%;
-    margin-top: 0.25%;
-    cursor: pointer;
+.syncode-ai-sparkle {
+    color: #c586c0;
+    font-size: 0.95rem;
+}
+
+.syncode-docked-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #252526;
+}
+
+.syncode-chat-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   Bottom Panels (Input, Output, Stats)
+   ========================================================================== */
+.syncode-bottom-row {
+    background: #1e1e1e;
+    padding: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.syncode-bottom-panel {
+    overflow: hidden;
+    background: #1e1e1e;
+    border: 0;
+    height: 100%;
+    min-height: 0;
+}
+
+.syncode-panel-card {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #1e1e1e;
+    overflow: hidden;
+}
+
+.syncode-panel-header {
+    height: 30px;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    background: #252526;
+    border-bottom: 1px solid #333333;
+    border-top: 1px solid #333333;
+    user-select: none;
+}
+
+.syncode-panel-header.is-error-header {
+    background: #2d2020;
+    border-bottom-color: #5a1d1d;
+}
+
+.syncode-panel-tag {
+    color: #cccccc;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.syncode-panel-hint {
+    color: #6a6a6a;
+    font-size: 0.72rem;
+    text-transform: lowercase;
+}
+
+.syncode-panel-badge.error {
+    background: #5a1d1d;
+    color: #f48771;
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.syncode-panel-body {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    background: #1e1e1e;
+    overflow: hidden;
+    display: flex;
+}
+
+.syncode-panel-textarea {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    background: transparent;
+    color: inherit;
+    font-family: 'Consolas', 'Courier New', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 8px 12px;
+    border: none;
+    outline: none;
+    resize: none;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+.syncode-panel-textarea::placeholder {
+    color: #6a6a6a;
+    font-style: italic;
+}
+
+/* ==========================================================================
+   Reflex Splitters (Resize bars)
+   ========================================================================== */
+.syncode-reflex-splitter {
+    background: #252526;
+    border: 0;
+    z-index: 5;
+    transition: background-color 0.15s ease;
+}
+
+.syncode-reflex-splitter.horizontal {
+    height: 6px !important;
+    min-height: 6px !important;
+    border-top: 1px solid #333333;
+    border-bottom: 1px solid #333333;
+    cursor: row-resize;
+}
+
+.syncode-reflex-splitter.vertical {
+    width: 6px !important;
+    min-width: 6px !important;
+    border-left: 1px solid #333333;
+    border-right: 1px solid #333333;
+    cursor: col-resize;
+}
+
+.syncode-reflex-splitter:hover,
+.syncode-reflex-splitter.active {
+    background: #007acc !important;
+}
+
+/* ==========================================================================
+   Utility & Scrollbars
+   ========================================================================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #424242;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4f4f4f;
 }
 
 .checkIcon {
-    transform: scale(1);
-    color: white;
-    position: absolute;
-    left: 43.5%;
     cursor: pointer;
-    margin-top: 0.35%;
-}
-
-.logoEditor {
-    font-size: 1.25em;
-    margin-left: 1.5%;
 }
 
 .mobile-notValid {
@@ -156,7 +468,9 @@ body {
     align-items: center;
     flex-direction: column;
     text-align: center;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Segoe UI', sans-serif;
     flex-wrap: wrap;
     height: 95vh;
+    color: #cccccc;
+    background: #1e1e1e;
 }

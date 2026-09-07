@@ -7,7 +7,7 @@ import Message from './Message/Message';
 import './Messages.css';
 
 const Messages = ({ messages, nameOfUser }) => (
-  <ScrollToBottom className="messages" style={{minHeight:"70vh"}}>
+  <ScrollToBottom className="messages">
     {messages.map((message, i) => <div key={i}><Message message={message} nameOfUser={nameOfUser}/></div>)}
   </ScrollToBottom>
 );
