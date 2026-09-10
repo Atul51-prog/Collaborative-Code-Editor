@@ -16,7 +16,8 @@ const Rooms = (props) => {
     const { user, logout } = useAuth();
     const [roomCode, setRoomCode] = useState('');
     const [joinRoom, setJoinRoom] = useState('');
-    const [roomLink, setRoomLink] = useState('');
+    const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+    const [joinError, setJoinError] = useState('');
     const socket = props.socket;
 
     const generateRoomCode = () => {
@@ -46,23 +47,14 @@ const Rooms = (props) => {
     const handleJoinSubmit = (e) => {
         if (e) e.preventDefault();
         const cleanId = extractRoomId(joinRoom);
-        if (cleanId !== '') {
-            // Dismiss Bootstrap modal
-            if (typeof window !== 'undefined' && window.$) {
-                try {
-                    window.$('#joinRoomModal').modal('hide');
-                } catch (err) {
-                    console.log('Modal dismiss error:', err);
-                }
-            }
-            // Clean any lingering backdrop elements
-            document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-
-            history.push(`/room/${cleanId}`);
+        if (!cleanId) {
+            setJoinError('Please enter or paste a valid room code or link.');
+            return;
         }
+        setIsJoinModalOpen(false);
+        setJoinRoom('');
+        setJoinError('');
+        history.push(`/room/${cleanId}`);
     };
 
     return (
@@ -146,8 +138,10 @@ const Rooms = (props) => {
                         <button
                             type="button"
                             className="syncode-btn syncode-btn-secondary"
-                            data-toggle="modal"
-                            data-target="#joinRoomModal"
+                            onClick={() => {
+                                setIsJoinModalOpen(true);
+                                setJoinError('');
+                            }}
                         >
                             <GroupAddRoundedIcon className="mr-2" />
                             Join Room
@@ -171,53 +165,70 @@ const Rooms = (props) => {
                 </div>
             </main>
 
-            {/* Join Room Modal */}
-            <div className="modal fade" id="joinRoomModal" tabIndex="-1" aria-labelledby="joinRoomModalLabel" aria-hidden="true">
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content syncode-dark-modal">
-                        <div className="modal-header syncode-modal-header">
-                            <h5 className="modal-title syncode-modal-title" id="joinRoomModalLabel">
-                                <GroupAddRoundedIcon className="mr-2" style={{ color: '#007acc' }} />
-                                Join Existing Room
-                            </h5>
-                            <button type="button" className="close text-light" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <form onSubmit={handleJoinSubmit}>
-                            <div className="modal-body syncode-modal-body">
-                                <p className="syncode-modal-help">
-                                    Enter the room ID provided by your team member or collaborator:
-                                </p>
-                                <div className="form-group mb-0">
-                                    <input
-                                        type="text"
-                                        className="form-control syncode-modal-input"
-                                        placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
-                                        value={joinRoom}
-                                        onChange={(e) => setJoinRoom(e.target.value)}
-                                        autoFocus
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div className="modal-footer syncode-modal-footer">
-                                <button type="button" className="btn syncode-modal-btn-cancel" data-dismiss="modal">
-                                    Cancel
-                                </button>
+            {/* Controlled Join Room Modal */}
+            {isJoinModalOpen && (
+                <div className="syncode-modal-overlay" onClick={() => setIsJoinModalOpen(false)}>
+                    <div className="syncode-modal-container" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-content syncode-dark-modal">
+                            <div className="modal-header syncode-modal-header">
+                                <h5 className="modal-title syncode-modal-title">
+                                    <GroupAddRoundedIcon className="mr-2" style={{ color: '#007acc' }} />
+                                    Join Existing Room
+                                </h5>
                                 <button
-                                    type="submit"
-                                    className="btn syncode-modal-btn-join"
-                                    data-dismiss="modal"
-                                    disabled={!joinRoom.trim()}
+                                    type="button"
+                                    className="close text-light"
+                                    onClick={() => setIsJoinModalOpen(false)}
+                                    aria-label="Close"
                                 >
-                                    Enter Room
+                                    <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                        </form>
+                            <form onSubmit={handleJoinSubmit}>
+                                <div className="modal-body syncode-modal-body">
+                                    <p className="syncode-modal-help">
+                                        Enter the room ID or paste the room link provided by your collaborator:
+                                    </p>
+                                    <div className="form-group mb-2">
+                                        <input
+                                            type="text"
+                                            className="form-control syncode-modal-input"
+                                            placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+                                            value={joinRoom}
+                                            onChange={(e) => {
+                                                setJoinRoom(e.target.value);
+                                                if (joinError) setJoinError('');
+                                            }}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    {joinError && (
+                                        <div className="text-danger small mt-1 font-weight-bold">
+                                            {joinError}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="modal-footer syncode-modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn syncode-modal-btn-cancel"
+                                        onClick={() => setIsJoinModalOpen(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn syncode-modal-btn-join"
+                                        disabled={!joinRoom.trim()}
+                                    >
+                                        Enter Room
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
