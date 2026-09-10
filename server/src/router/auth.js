@@ -11,95 +11,95 @@ const User = require('../models/userSchema');
 
 
 router.post('/register', async (req, res) => {
-    console.log('Hello');
-    console.log(req.body);
     const { userName, email, password } = req.body;
 
     if (!userName || !email || !password) {
-        console.log('Please enter');
-        return res.status(422).json({ error:"Please fill all required fields" });
+        return res.status(422).json({ error: "Please fill all required fields" });
     }
 
     try {
-        const userExists = await User.findOne({ email: email });
+        const cleanEmail = email.toLowerCase().trim();
+        const userExists = await User.findOne({ email: cleanEmail });
         
-        if(userExists) {
-            return res.status(422).json({ error:"User with same email already exists" });
+        if (userExists) {
+            return res.status(422).json({ error: "User with same email already exists" });
         }
-        const user = new User({ userName, email, password });
+        const user = new User({ userName: userName.trim(), email: cleanEmail, password });
 
         const userRegistered = await user.save();
 
-        if(userRegistered) {
-            res.status(201).json({message:"User registered successfully"});
+        if (userRegistered) {
+            return res.status(201).json({ message: "User registered successfully" });
         }
     } catch (error) {
-        console.log(error);
+        console.log("Register error:", error);
+        return res.status(500).json({ error: "Registration failed" });
     } 
 });
 
 router.post('/login', async (req, res) => {
-    const { userName, password } = req.body;
+    const { userName, email, identifier, loginId, password } = req.body;
+    const loginIdentifier = (identifier || loginId || userName || email || '').trim();
 
-    if (!userName || !password) {
-        return res.status(422).json({ error:"Please fill all required fields" });
+    if (!loginIdentifier || !password) {
+        return res.status(422).json({ error: "Please fill all required fields" });
     }
 
     try {
-        const userExists = await User.findOne({ userName: userName });
+        const escaped = loginIdentifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const userExists = await User.findOne({
+            $or: [
+                { userName: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+                { email: { $regex: new RegExp(`^${escaped}$`, 'i') } }
+            ]
+        });
 
-        if (userExists){
+        if (userExists) {
             const isMatch = await bcrypt.compare(password, userExists.password);
             
             if (!isMatch) {
-                res.status(400).json({error: "Invalid credentials"});   
-            } else {
-                const token = await userExists.generateAuthToken();
-                console.log(token);
-
-                res.cookie("jwtToken", token, {
-                    expires: new Date(Date.now() + 25892000000),
-                    httpOnly: true,
-                    sameSite: 'lax',
-                    path: '/'
-                });
-
-                res.json({
-                    message: "Logged In successfully",
-                    token: token,
-                    user: {
-                        _id: userExists._id,
-                        userName: userExists.userName,
-                        email: userExists.email
-                    }
-                });
+                return res.status(400).json({ error: "Invalid credentials" });   
             }
+
+            const token = await userExists.generateAuthToken();
+
+            res.cookie("jwtToken", token, {
+                expires: new Date(Date.now() + 25892000000),
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/'
+            });
+
+            return res.json({
+                message: "Logged In successfully",
+                token: token,
+                user: {
+                    _id: userExists._id,
+                    userName: userExists.userName,
+                    email: userExists.email
+                }
+            });
+        } else {
+            return res.status(400).json({ error: "Invalid credentials" });
         }
-        else{
-            res.status(400).json({error: "Invalid credentials"});
-        }
-        
-        
     } catch (error) {
-        console.log(error);
+        console.log("Login error:", error);
+        return res.status(500).json({ error: "Internal server error" });
     } 
 });
 
 router.get('/roomsforuser', authenticate, (req, res) => {
-    console.log("Hello From Room");
     res.send(req.rootUser);
 });
 
 router.get('/logout', (req, res) => {
-    console.log("Loggin out");
-    res.clearCookie('jwtToken', {path:'/'})
+    res.clearCookie('jwtToken', { path: '/' });
     res.status(200).send("Logged out successfully");
 });
 
 router.get('/inaroom', authenticate, (req, res) => {
-    console.log("Hello From inside Room");
     res.send(req.rootUser);
-})
+});
 
 router.get('/checkforUser', authenticate, (req, res)=>{
     res.status(200).json({

@@ -91,14 +91,20 @@ export const AuthProvider = ({ children }) => {
     refreshAuth();
   }, [refreshAuth]);
 
-  const login = useCallback(async ({ userName, password }) => {
+  const login = useCallback(async (credentials) => {
+    const identifier =
+      typeof credentials === 'string'
+        ? credentials
+        : credentials.identifier || credentials.userName || credentials.email || '';
+    const password = credentials.password;
+
     const res = await fetch(`${BACKEND_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ userName, password }),
+      body: JSON.stringify({ identifier, password }),
     });
 
     const data = await res.json();

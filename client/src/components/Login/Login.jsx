@@ -85,18 +85,25 @@ export default function Login() {
 
         try {
           const { userName, password } = user;
-          await login({ userName, password });
+          if (!userName.trim() || !password) {
+            enqueueSnackbar('Please enter your email or username and password', {
+              variant: "warning"
+            });
+            return;
+          }
+
+          await login({ identifier: userName.trim(), password });
           enqueueSnackbar('Logged in successfully', {
             variant: "success"
-          })
+          });
           console.log("Logged In Successful");
 
           history.push(history.location.state?.from?.pathname || "/");
         } catch (error) {
-          enqueueSnackbar('Invalid Credentials', {
+          enqueueSnackbar(error.message || 'Invalid Credentials', {
             variant: "error"
-          })
-            console.log("Invalid Credentials");
+          });
+          console.log("Invalid Credentials:", error);
         }
     }
 
@@ -123,7 +130,8 @@ export default function Login() {
                 fullWidth
                 value={user.userName}
                 id="currUsername"
-                label="Username"
+                label="Email or Username"
+                placeholder="e.g. atul@gmail.com or atul51"
                 onChange={handleInputs}
                 autoFocus
               />
