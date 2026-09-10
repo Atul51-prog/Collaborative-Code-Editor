@@ -33,19 +33,37 @@ const Rooms = (props) => {
         }
     }, [roomCode, history, socket]);
 
-    const handleJoinSubmit = (e) => {
-        if (e) e.preventDefault();
-        const trimmed = joinRoom.trim();
-        if (trimmed !== '') {
-            setRoomLink(trimmed);
+    const extractRoomId = (rawInput) => {
+        if (!rawInput) return '';
+        let trimmed = rawInput.trim().replace(/\/+$/, '');
+        if (trimmed.includes('/room/')) {
+            const parts = trimmed.split('/room/');
+            return parts[parts.length - 1].split('?')[0].split('#')[0].trim();
         }
+        return trimmed;
     };
 
-    useEffect(() => {
-        if (roomLink !== '') {
-            history.push(`/room/${roomLink}`);
+    const handleJoinSubmit = (e) => {
+        if (e) e.preventDefault();
+        const cleanId = extractRoomId(joinRoom);
+        if (cleanId !== '') {
+            // Dismiss Bootstrap modal
+            if (typeof window !== 'undefined' && window.$) {
+                try {
+                    window.$('#joinRoomModal').modal('hide');
+                } catch (err) {
+                    console.log('Modal dismiss error:', err);
+                }
+            }
+            // Clean any lingering backdrop elements
+            document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            history.push(`/room/${cleanId}`);
         }
-    }, [roomLink, history]);
+    };
 
     return (
         <div className="rooms-wrapper" style={{ backgroundImage: `url(${roombackground})` }}>
