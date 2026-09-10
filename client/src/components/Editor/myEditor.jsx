@@ -158,15 +158,24 @@ const MyEditor = (props) => {
 	}, [activeSidePanel]);
 
 	const toggleSidePanel = (panelName) => {
-		setActiveSidePanel((current) => (current === panelName ? null : panelName));
+		setActiveSidePanel((current) => {
+			const next = current === panelName ? null : panelName;
+			if (next === "chat") {
+				setHasUnreadChat(false);
+			}
+			return next;
+		});
 	};
 
 	// Called whenever there is a change in the editor
 	const handleEditorChange = (value, event) => {
 		const nextCode = value || '';
-		setValue(nextCode)
-		seteditorCode(nextCode)
-		setcodeInRoom(nextCode)
+		setValue(nextCode);
+		seteditorCode(nextCode);
+		setcodeInRoom(nextCode);
+		if (socket) {
+			socket.emit('code-change', nextCode);
+		}
 	};
 
 	// For theme of code editor
@@ -193,33 +202,9 @@ const MyEditor = (props) => {
 		});
 	}
 
-	// If language changes on one socket, emit to all other
-	useEffect(() => {
-		if (socket) {
-			socket.emit('language-change', language)
-		}
-		
-	}, [socket, language])
+	const [hasUnreadChat, setHasUnreadChat] = useState(false);
 
-
-	// If there is a code change on a socket, emit to all other
-	useEffect(() => {
-		if (socket) {
-			socket.emit('code-change', editorCode)
-		}
-		
-	}, [socket, editorCode])
-
-	// If there is a title change on a socket, emit to all other
-	useEffect(() => {
-		if (socket) {
-			socket.emit('title-change', title)
-		}
-		
-	}, [socket, title])
-
-
-	// Recieve code, title and language changes
+	// Recieve code, title, language changes and chat messages
 	useEffect(() => {
 		if (!socket) {
 			return;
@@ -229,6 +214,7 @@ const MyEditor = (props) => {
 			const nextCode = typeof data === 'string' ? data : data?.code || '';
 			setValue(nextCode)
 			setcodeInRoom(nextCode)
+            seteditorCode(nextCode)
 		}
 
 		const handleLanguageUpdate = (data) => {
@@ -240,10 +226,19 @@ const MyEditor = (props) => {
 
 		const handleTitleUpdate = (data) => {
 			setTitleInfo(data)
+			setTitle(data)
 		}
 
-		const handleReceiveMessage = message => {
-			setMessages(messages => [...messages, message]);
+		const handleReceiveMessage = (msg) => {
+			setMessages((prev) => [...prev, msg]);
+			if (msg.sender && msg.sender !== nameOfUser && msg.sender !== 'admin') {
+				setActiveSidePanel((current) => {
+					if (current !== "chat") {
+						setHasUnreadChat(true);
+					}
+					return current;
+				});
+			}
 		};
 
 		const handleRequestInfo = () => {
@@ -322,9 +317,13 @@ const MyEditor = (props) => {
 	const fontSizes = ["10px", "12px", "14px", "16px", "18px", "20px", "22px", "24px", "26px", "28px", "30px"]
 
 	const changeLanguage = (e) => {
-		setLanguage(languages[e.target.value])
-		setlanguageInRoom(languages[e.target.value])
-		setfileExtensionValue(e.target.value)
+		const newLang = languages[e.target.value];
+		setLanguage(newLang);
+		setlanguageInRoom(newLang);
+		setfileExtensionValue(e.target.value);
+		if (socket) {
+			socket.emit('language-change', newLang);
+		}
 	}
 
 	const changeFontSize = (e) => {
@@ -354,14 +353,17 @@ const MyEditor = (props) => {
 	}
 
 	const titleUpdated = (e) => {
-		setTitle(titleInfo)
-		setTitleChange(false)
-	}
+		setTitle(titleInfo);
+		setTitleChange(false);
+		if (socket) {
+			socket.emit('title-change', titleInfo);
+		}
+	};
 
-	const downloadCode = (e) =>{
-		e.preventDefault();
-		fileDownload(editorCode, `${title}.${languageExtension[fileExtensionValue]}`)
-	}
+	const downloadCode = (e) => {
+		if (e) e.preventDefault();
+		fileDownload(editorCode, `${title}.${languageExtension[fileExtensionValue]}`);
+	};
 
 	const showFile = async (e) => {
 		e.preventDefault()
@@ -556,9 +558,14 @@ const MyEditor = (props) => {
 							type="button"
 							className={`syncode-nav-action ${activeSidePanel === "chat" ? "active" : ""}`}
 							onClick={() => toggleSidePanel("chat")}
-							title="Toggle Team Chat"
+							title={hasUnreadChat ? "New unread team message - Open Chat" : "Toggle Team Chat"}
 						>
-							<ChatBubbleOutlineRoundedIcon fontSize="small" />
+							<div className="syncode-chat-icon-container">
+								<ChatBubbleOutlineRoundedIcon fontSize="small" />
+								{hasUnreadChat && (
+									<span className="syncode-chat-unread-dot" title="New unread message" />
+								)}
+							</div>
 							<span className="syncode-btn-text">Chat</span>
 						</button>
 

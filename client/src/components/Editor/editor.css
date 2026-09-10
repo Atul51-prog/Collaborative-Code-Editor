@@ -58,10 +58,10 @@ body {
     justify-content: space-between;
     gap: 8px;
     flex-shrink: 0;
-    z-index: 10;
+    z-index: 1000;
+    position: relative;
     overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
+    overflow-y: visible;
     scrollbar-width: none; /* Firefox */
 }
 
@@ -582,6 +582,42 @@ body {
     position: relative;
     display: inline-flex;
     align-items: center;
+    z-index: 1050;
+}
+
+.syncode-chat-icon-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.syncode-chat-unread-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #3fb950;
+    border: 1.5px solid #1e1e1e;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(63, 185, 80, 0.9);
+    animation: unreadGlow 1.8s infinite;
+}
+
+@keyframes unreadGlow {
+    0% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7);
+    }
+    70% {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 5px rgba(63, 185, 80, 0);
+    }
+    100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(63, 185, 80, 0);
+    }
 }
 
 .syncode-participants-pill {
@@ -616,14 +652,14 @@ body {
 
 .syncode-users-popover {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 6px);
     right: 0;
     width: 280px;
     background: #252526;
     border: 1px solid #3c3c3c;
     border-radius: 8px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
-    z-index: 1000;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.85);
+    z-index: 2000;
     overflow: hidden;
     animation: popoverFadeIn 0.15s ease-out;
 }
