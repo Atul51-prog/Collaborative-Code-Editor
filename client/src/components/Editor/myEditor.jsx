@@ -40,8 +40,7 @@ const MyEditor = (props) => {
     const history = useHistory();
 
 	const [theme, setTheme] = useState("vs-dark");
-
-	const [language, setLanguage] = useState("cpp")
+	const [language, setLanguage] = useState("cpp");
 	// Check if editor is ready
 	const [isEditorReady, setIsEditorReady] = useState(false)
 	// Send chunks of code on change
@@ -50,6 +49,9 @@ const MyEditor = (props) => {
 	const [value, setValue] = useState('')
 	const [sendInitialData, setSendInitialData] = useState(false)
 	const [users, setUsers] = useState(0)
+	const [usersList, setUsersList] = useState([])
+	const [isUsersPopupOpen, setIsUsersPopupOpen] = useState(false)
+	const usersPopupRef = useRef(null)
 	const [title, setTitle] = useState("Untitled")
 	const [titleInfo, setTitleInfo] = useState("Untitled")
 	const [titleChange, setTitleChange] = useState(false)
@@ -262,6 +264,12 @@ const MyEditor = (props) => {
 			setUsers(data)
 		}
 
+		const handleRoomUsersList = (data) => {
+			if (Array.isArray(data)) {
+				setUsersList(data);
+			}
+		}
+
 		socket.on('code-update', handleCodeUpdate)
 		socket.on('language-update', handleLanguageUpdate)
 		socket.on('title-update', handleTitleUpdate)
@@ -269,6 +277,7 @@ const MyEditor = (props) => {
 		socket.on('request-info', handleRequestInfo)
 		socket.on('accept-info', handleAcceptInfo)
 		socket.on('joined-users', handleJoinedUsers)
+		socket.on('room-users-list', handleRoomUsersList)
 
 		return () => {
 			socket.off('code-update', handleCodeUpdate)
@@ -278,8 +287,23 @@ const MyEditor = (props) => {
 			socket.off('request-info', handleRequestInfo)
 			socket.off('accept-info', handleAcceptInfo)
 			socket.off('joined-users', handleJoinedUsers)
+			socket.off('room-users-list', handleRoomUsersList)
 		}
 	}, [socket, setcodeInRoom, setlanguageInRoom])
+
+	useEffect(() => {
+		const handleOutsideClick = (e) => {
+			if (usersPopupRef.current && !usersPopupRef.current.contains(e.target)) {
+				setIsUsersPopupOpen(false);
+			}
+		};
+		if (isUsersPopupOpen) {
+			document.addEventListener('mousedown', handleOutsideClick);
+		}
+		return () => {
+			document.removeEventListener('mousedown', handleOutsideClick);
+		};
+	}, [isUsersPopupOpen]);
 
 
 	// If a new user join, send him current language and title used by other sockets.
@@ -449,10 +473,74 @@ const MyEditor = (props) => {
 
 					{/* Right Group: Collab Tools, AI, Chat, Theme, Download/Upload, Leave */}
 					<div className="syncode-nav-right">
-						<span className="syncode-participants-pill" title={`${users} active participants`}>
-							<span className="syncode-live-dot" />
-							<span className="syncode-participants-text">{users} online</span>
-						</span>
+						<div className="syncode-participants-wrapper" ref={usersPopupRef}>
+							<button
+								type="button"
+								className={`syncode-participants-pill ${isUsersPopupOpen ? 'active' : ''}`}
+								onClick={() => setIsUsersPopupOpen(!isUsersPopupOpen)}
+								title="Click to view all online users in this room"
+							>
+								<span className="syncode-live-dot" />
+								<span className="syncode-participants-text">
+									{usersList.length > 0 ? usersList.length : users || 1} online
+								</span>
+							</button>
+
+							{isUsersPopupOpen && (
+								<div className="syncode-users-popover">
+									<div className="syncode-users-popover-header">
+										<div className="syncode-users-popover-title">
+											<span className="syncode-live-dot" />
+											<span>Collaborators ({usersList.length > 0 ? usersList.length : users || 1})</span>
+										</div>
+										<button
+											type="button"
+											className="syncode-users-popover-close"
+											onClick={() => setIsUsersPopupOpen(false)}
+											title="Close"
+										>
+											✕
+										</button>
+									</div>
+
+									<div className="syncode-users-list">
+										{(usersList.length > 0 ? usersList : [nameOfUser || 'You']).map((uname, index) => {
+											const isCurrentUser = uname === nameOfUser;
+											return (
+												<div key={index} className="syncode-user-item">
+													<div className="syncode-user-avatar">
+														{uname.charAt(0).toUpperCase()}
+													</div>
+													<div className="syncode-user-info">
+														<span className="syncode-user-name" title={uname}>
+															{uname}
+														</span>
+														{isCurrentUser && (
+															<span className="syncode-you-tag">You</span>
+														)}
+													</div>
+													<span className="syncode-user-online-badge">● Active</span>
+												</div>
+											);
+										})}
+									</div>
+
+									<div className="syncode-users-popover-footer">
+										<button
+											type="button"
+											className="syncode-invite-btn"
+											onClick={() => {
+												copyRoomCode();
+												setIsUsersPopupOpen(false);
+											}}
+										>
+											<ShareRoundedIcon fontSize="small" className="mr-1" />
+											Invite Collaborators
+										</button>
+									</div>
+								</div>
+							)}
+						</div>
 
 						<button
 							type="button"

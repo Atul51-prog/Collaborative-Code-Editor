@@ -95,23 +95,31 @@ function getLastValue(set){
   return value;
 }
 
+const roomParticipants = new Map(); // roomId -> Map(socketId -> userName)
+
+const broadcastRoomUsers = (roomId) => {
+    if (!roomId) return;
+    const roomMap = roomParticipants.get(roomId);
+    const usersList = roomMap ? Array.from(roomMap.values()) : [];
+    io.sockets.in(roomId).emit('joined-users', usersList.length);
+    io.sockets.in(roomId).emit('room-users-list', usersList);
+};
+
 io.on("connection", socket => {
-  console.log("COMMECTED SUCCESSFULLY");
-  const { id } = socket.client
-  console.log(`User connected ${id}`)
+  console.log("CONNECTED SUCCESSFULLY");
+  const { id } = socket.client;
+  console.log(`User connected ${id}`);
 
   // Check if room exists
   socket.on('room-id', msg => {
-      let exists = rooms.includes(msg)
-      socket.emit('room-check', exists)
-
-  })
+      let exists = rooms.includes(msg);
+      socket.emit('room-check', exists);
+  });
 
   // If code changes, broadcast to sockets
   socket.on('code-change', msg => {
-      socket.broadcast.to(socket.room).emit('code-update', msg)
-
-  })
+      socket.broadcast.to(socket.room).emit('code-update', msg);
+  });
 
   // Send initial data to last person who joined
   socket.on('user-join', msg => {
@@ -119,93 +127,91 @@ io.on("connection", socket => {
       let lastPerson = getLastValue(room);
       console.log("lastPerson-->" + lastPerson);
       io.to(lastPerson).emit('accept-info', msg);
-  })
+  });
 
   // Add room to socket
   socket.on('join-room', msg => {
-      console.log("JOINING " + msg.id)
+      console.log("JOINING " + msg.id);
       if (!rooms.includes(msg.id)) {
-          rooms.push(msg.id)
+          rooms.push(msg.id);
       }
-      socket.room = msg.id
+      socket.room = msg.id;
+      socket.userName = msg.nameOfUser;
       socket.join(msg.id);
-      console.log(io.sockets.adapter.rooms);
-      console.log(io.sockets.adapter.rooms.get(msg.id));
     
-      let room = io.sockets.adapter.rooms.get(socket.room);
-      console.log(room);
-      if (room.size > 1) {
-          var it = room.values();
+      if (!roomParticipants.has(msg.id)) {
+          roomParticipants.set(msg.id, new Map());
+      }
+      roomParticipants.get(msg.id).set(socket.id, msg.nameOfUser);
 
+      let room = io.sockets.adapter.rooms.get(socket.room);
+      if (room && room.size > 1) {
+          var it = room.values();
           var first = it.next();
           let user = first.value;
-          console.log("first-->" + user);
-          // let user = Object.keys(room.sockets)[0]
           io.to(user).emit('request-info', "");
       }
-      console.log("-----> "+ Object.values(msg));
-      socket.emit('receive-message', { sender: 'admin', text: `${msg.nameOfUser}, welcome to room.`});
+
+      socket.emit('receive-message', { sender: 'admin', text: `${msg.nameOfUser}, welcome to room.` });
       socket.broadcast.to(socket.room).emit('receive-message', { sender: 'admin', text: `${msg.nameOfUser} has joined!` });
-      io.sockets.in(socket.room).emit('joined-users', room.size)
-  })
+      broadcastRoomUsers(msg.id);
+  });
 
   socket.on('created-room', msg => {
-      console.log("CREATED-ROOM " + msg)
-      rooms.push(msg)
-      console.log(rooms);
-  })
-
+      console.log("CREATED-ROOM " + msg);
+      if (!rooms.includes(msg)) rooms.push(msg);
+  });
 
   // If language changes, broadcast to sockets
   socket.on('language-change', msg => {
-      io.sockets.in(socket.room).emit('language-update', msg)
-  })
+      io.sockets.in(socket.room).emit('language-update', msg);
+  });
 
   // If title changes, broadcast to sockets
   socket.on('title-change', msg => {
-      io.sockets.in(socket.room).emit('title-update', msg)
-  })
+      io.sockets.in(socket.room).emit('title-update', msg);
+  });
 
-  socket.on('sendMessage', ({message, sender}) => {
+  socket.on('sendMessage', ({ message, sender }) => {
     io.to(socket.room).emit('receive-message', { sender: sender, text: message });
   });
 
-  // If connection is lost
-  socket.on('disconnect', () => {
-      console.log(`User ${id} disconnected`)
-  })
-
-  socket.on('leaving', (msg)=>{
-    try {
-        let room = io.sockets.adapter.rooms.get(socket.room)
-        io.sockets.in(socket.room).emit('joined-users', room.size - 1)
-        socket.broadcast.to(socket.room).emit('receive-message', { sender: 'admin', text: `${msg.nameOfUser} has left!` });
-        if (room.size === 1) {
-            console.log("Leaving Room " + socket.room)
-            socket.leave(socket.room)
-            removeRooms.push(socket.room)
-        }
-    }
-    catch (error) {
-        console.log("Leaving error")
-    }
-  })
-
-  // Check if there is no one in the room, remove the room if true
-  socket.on('disconnecting', () => {
-      try {
-          let room = io.sockets.adapter.rooms.get(socket.room)
-          io.sockets.in(socket.room).emit('joined-users', room.size - 1)
-          if (room.size === 1) {
-              console.log("Leaving Room " + socket.room)
-              socket.leave(socket.room)
-              removeRooms.push(socket.room)
+  const handleSocketLeave = (explicitName) => {
+      if (socket.room && roomParticipants.has(socket.room)) {
+          const roomMap = roomParticipants.get(socket.room);
+          const userName = explicitName || socket.userName || roomMap.get(socket.id);
+          roomMap.delete(socket.id);
+          broadcastRoomUsers(socket.room);
+          if (userName) {
+              socket.broadcast.to(socket.room).emit('receive-message', { sender: 'admin', text: `${userName} has left!` });
+          }
+          if (roomMap.size === 0) {
+              roomParticipants.delete(socket.room);
+              removeRooms.push(socket.room);
           }
       }
-      catch (error) {
-          console.log("Disconnect error")
+  };
+
+  // If connection is lost
+  socket.on('disconnect', () => {
+      console.log(`User ${id} disconnected`);
+      handleSocketLeave();
+  });
+
+  socket.on('leaving', (msg) => {
+      try {
+          handleSocketLeave(msg?.nameOfUser);
+          if (socket.room) {
+              socket.leave(socket.room);
+          }
+      } catch (error) {
+          console.log("Leaving error:", error);
       }
-  })
+  });
+
+  socket.on('disconnecting', () => {
+      handleSocketLeave();
+  });
 })
 
 app.get('/', (req, res) => {
