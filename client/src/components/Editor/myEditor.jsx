@@ -132,17 +132,32 @@ const MyEditor = (props) => {
 	}, [socket, id, nameOfUser])
 
 	// Ref for editor
-	const editorRef = useRef()
+	const editorRef = useRef();
 
 	// Called on initialization, adds ref
 	const handleEditorDidMount = (editor, monaco) => {
 		setIsEditorReady(true);
 		editorRef.current = editor;
-	}
+	};
+
+	// Ensure Monaco re-layouts on window resize or panel toggle
+	useEffect(() => {
+		const handleWindowResize = () => {
+			if (editorRef.current) {
+				editorRef.current.layout();
+			}
+		};
+		window.addEventListener('resize', handleWindowResize);
+		const timer = setTimeout(handleWindowResize, 150);
+		return () => {
+			window.removeEventListener('resize', handleWindowResize);
+			clearTimeout(timer);
+		};
+	}, [activeSidePanel]);
 
 	const toggleSidePanel = (panelName) => {
 		setActiveSidePanel((current) => (current === panelName ? null : panelName));
-	}
+	};
 
 	// Called whenever there is a change in the editor
 	const handleEditorChange = (value, event) => {
@@ -353,136 +368,165 @@ const MyEditor = (props) => {
 
 				{socket && (
 				<>
-				<nav className="navbar navbar-expand-lg syncode-editor-nav mb-2 py-0">
-					<NavLink className="navbar-brand syncode-brand" to="/" onClick={leaveRoom}>SynCode</NavLink>
-					<button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-						<span className="navbar-toggler-icon"></span>
-					</button>
-					<form className="d-flex" onSubmit={(e) => { e.preventDefault(); titleUpdated(); }}>
-						<input className="form-control me-2 syncode-title-input" type="text" placeholder="Enter file name here" aria-label="Search" value={titleInfo} onChange={titleUpdating} />
-						{titleChange === true &&
-							<button type="button" className="btn ml-2 btn-outline-success" onClick={titleUpdated} disabled={!isEditorReady} title="Save file name">
-								<IconContext.Provider value={{size:"1.4em"}}>
-									<RiCheckFill className="checkIcon"></RiCheckFill>
-								</IconContext.Provider>
-							</button>
-						}
-					</form>
-					<div className="collapse navbar-collapse" id="navbarSupportedContent">
-						<ul className="navbar-nav ml-auto">
-							
-							<li className="nav-item">
-								<IconButton
-									color="primary"
-									title={props.isRunning ? "Running code..." : "Run code"}
-									disabled={Boolean(props.isRunning)}
-									onClick={props.runcode}
-								>
-									<PlayArrowRoundedIcon/>
-                                </IconButton>
-							</li>
+				<nav className="syncode-editor-nav">
+					{/* Left Group: Brand, File name, Language */}
+					<div className="syncode-nav-left">
+						<NavLink className="syncode-brand" to="/" onClick={leaveRoom} title="Leave room and go home">
+							<span>SynCode</span>
+						</NavLink>
 
-							<li className="nav-item">
-								<IconButton color="primary" title="Download the code" onClick={downloadCode}>
-									<GetAppRoundedIcon/>
-                                </IconButton>
-							</li>
-							<li className="nav-item">
-								<IconButton color="primary" title="Upload the code" onClick={handleUpload}>
-									<PublishRoundedIcon/>
-                                </IconButton>
-								<input
-									type="file"
-									ref={hiddenFileInput}
-									onChange={(e)=>showFile(e)}
-									style={{display:'none'}} 
-								/>
-							</li>
-
-							<li className="nav-item">
-								{
-									theme==="vs-dark" ? 
-										<IconButton color="primary" onClick={toggleTheme} title="Change to Light theme">
-                                    		<Brightness7RoundedIcon />
-                                		</IconButton>
-									:
-										<IconButton color="primary" onClick={toggleTheme} title="Change to Dark theme">
-                                    		<Brightness4RoundedIcon />
-                                		</IconButton>
-								}
-							</li>
-
-							<li className="nav-item">
-								<IconButton color="primary" onClick={copyRoomCode} title="Share the room code">
-                                	<ShareRoundedIcon />
-                                </IconButton>
-							</li>
-							<li className="nav-item">
+						<form className="syncode-title-form" onSubmit={(e) => { e.preventDefault(); titleUpdated(); }}>
+							<input
+								className="syncode-title-input"
+								type="text"
+								placeholder="File name"
+								value={titleInfo}
+								onChange={titleUpdating}
+								title="Click to rename file"
+							/>
+							{titleChange === true && (
 								<button
 									type="button"
-									className={`syncode-nav-action ${activeSidePanel === "chat" ? "active" : ""}`}
-									onClick={() => toggleSidePanel("chat")}
-									title="Toggle Room Chat"
+									className="syncode-title-save-btn"
+									onClick={titleUpdated}
+									disabled={!isEditorReady}
+									title="Save file name"
 								>
-									<ChatBubbleOutlineRoundedIcon fontSize="small" />
-									<span>Chat</span>
+									<IconContext.Provider value={{ size: "1.2em" }}>
+										<RiCheckFill className="checkIcon" />
+									</IconContext.Provider>
 								</button>
-							</li>
+							)}
+						</form>
 
-							<li className="nav-item">
-								<button
-									type="button"
-									className={`syncode-nav-action ${activeSidePanel === "ai" ? "active" : ""}`}
-									onClick={() => toggleSidePanel("ai")}
-									title="Toggle AI Assistant"
-								>
-									<span>AI Chat</span>
-								</button>
-							</li>
+						<select
+							className="syncode-select syncode-lang-select"
+							title="Select Language"
+							value={fileExtensionValue}
+							onChange={changeLanguage}
+						>
+							<option value="0">C++</option>
+							<option value="1">Python</option>
+							<option value="2">JavaScript</option>
+							<option value="3">C</option>
+							<option value="4">Java</option>
+							<option value="5">Go</option>
+						</select>
+					</div>
 
-							<li className="nav-item">
-								<span className="nav-link mt-1 syncode-participants">Participants: {users}</span>
-							</li>
+					{/* Center Group: Run Button & Font Size */}
+					<div className="syncode-nav-center">
+						<button
+							type="button"
+							className={`syncode-run-btn ${props.isRunning ? 'running' : ''}`}
+							title={props.isRunning ? "Running code..." : "Run Code (Compile & Execute)"}
+							disabled={Boolean(props.isRunning)}
+							onClick={props.runcode}
+						>
+							<PlayArrowRoundedIcon fontSize="small" className="syncode-run-icon" />
+							<span className="syncode-btn-text">{props.isRunning ? "Running..." : "Run"}</span>
+						</button>
 
-							<li className="nav-item mr-2">
-								<select className="custom-select mt-1 syncode-select" title="change font size" defaultValue="3" onChange={changeFontSize}>
-									<option value="0">10px</option>
-									<option value="1">12px</option>
-									<option value="2">14px</option>
-									<option value="3">16px</option>
-									<option value="4">18px</option>
-									<option value="5">20px</option>
-									<option value="6">22px</option>
-									<option value="7">24px</option>
-									<option value="8">26px</option>
-									<option value="9">28px</option>
-									<option value="10">30px</option>
-								</select>
-							</li>
-							
-							<li className="nav-item">
-								<select
-									className="custom-select mt-1 syncode-select"
-									title="Select Language"
-									value={fileExtensionValue}
-									onChange={changeLanguage}
-								>
-									<option value="0">C++</option>
-									<option value="1">Python</option>
-									<option value="2">Javascript</option>
-									<option value="3">C</option>
-									<option value="4">Java</option>
-									<option value="5">Go</option>
-								</select>
-							</li>
+						<select
+							className="syncode-select syncode-font-select"
+							title="Editor Font Size"
+							defaultValue="3"
+							onChange={changeFontSize}
+						>
+							<option value="0">10px</option>
+							<option value="1">12px</option>
+							<option value="2">14px</option>
+							<option value="3">16px</option>
+							<option value="4">18px</option>
+							<option value="5">20px</option>
+							<option value="6">22px</option>
+							<option value="7">24px</option>
+							<option value="8">26px</option>
+							<option value="9">28px</option>
+							<option value="10">30px</option>
+						</select>
+					</div>
 
-							<li className="nav-item">
-								<IconButton style={{color:"#dc3545"}} onClick={leaveRoom} title="Leave room">
-                                	<ExitToAppRoundedIcon/>
-                                </IconButton>
-							</li>
-						</ul>
+					{/* Right Group: Collab Tools, AI, Chat, Theme, Download/Upload, Leave */}
+					<div className="syncode-nav-right">
+						<span className="syncode-participants-pill" title={`${users} active participants`}>
+							<span className="syncode-live-dot" />
+							<span className="syncode-participants-text">{users} online</span>
+						</span>
 
+						<button
+							type="button"
+							className={`syncode-nav-action syncode-ai-btn ${activeSidePanel === "ai" ? "active" : ""}`}
+							onClick={() => toggleSidePanel("ai")}
+							title="Toggle AI Assistant"
+						>
+							<span className="syncode-ai-star">✦</span>
+							<span className="syncode-btn-text">AI Help</span>
+						</button>
+
+						<button
+							type="button"
+							className={`syncode-nav-action ${activeSidePanel === "chat" ? "active" : ""}`}
+							onClick={() => toggleSidePanel("chat")}
+							title="Toggle Team Chat"
+						>
+							<ChatBubbleOutlineRoundedIcon fontSize="small" />
+							<span className="syncode-btn-text">Chat</span>
+						</button>
+
+						<IconButton
+							className="syncode-icon-btn"
+							color="primary"
+							onClick={copyRoomCode}
+							title="Copy Room Link & Code"
+						>
+							<ShareRoundedIcon fontSize="small" />
+						</IconButton>
+
+						<IconButton
+							className="syncode-icon-btn"
+							color="primary"
+							onClick={downloadCode}
+							title="Download Code File"
+						>
+							<GetAppRoundedIcon fontSize="small" />
+						</IconButton>
+
+						<IconButton
+							className="syncode-icon-btn"
+							color="primary"
+							onClick={handleUpload}
+							title="Upload Local File"
+						>
+							<PublishRoundedIcon fontSize="small" />
+						</IconButton>
+						<input
+							type="file"
+							ref={hiddenFileInput}
+							onChange={(e) => showFile(e)}
+							style={{ display: 'none' }}
+						/>
+
+						<IconButton
+							className="syncode-icon-btn"
+							color="primary"
+							onClick={toggleTheme}
+							title={theme === "vs-dark" ? "Switch to Light theme" : "Switch to Dark theme"}
+						>
+							{theme === "vs-dark" ? (
+								<Brightness7RoundedIcon fontSize="small" />
+							) : (
+								<Brightness4RoundedIcon fontSize="small" />
+							)}
+						</IconButton>
+
+						<IconButton
+							className="syncode-icon-btn syncode-leave-btn"
+							onClick={leaveRoom}
+							title="Leave Room"
+						>
+							<ExitToAppRoundedIcon fontSize="small" />
+						</IconButton>
 					</div>
 				</nav>
 

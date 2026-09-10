@@ -178,7 +178,7 @@ const Room = (props) => {
 	return (
 		<div className="syncode-room-shell">
 			<ReflexContainer orientation="horizontal">
-				<ReflexElement className="syncode-workspace-element" minSize={200} flex={0.70}>
+				<ReflexElement className="syncode-workspace-element" minSize={120} flex={0.70}>
 					<MyEditor
 						socket={socket}
 						nameOfUser={props.nameOfUser}
@@ -194,17 +194,17 @@ const Room = (props) => {
 
 				<ReflexSplitter className="syncode-reflex-splitter horizontal" />
 
-				<ReflexElement className="syncode-bottom-row" minSize={120} maxSize={450} flex={0.30}>
+				<ReflexElement className="syncode-bottom-row" minSize={80} maxSize={500} flex={0.30}>
 					<ReflexContainer orientation="vertical">
-						<ReflexElement className="syncode-bottom-panel" minSize={180}>
+						<ReflexElement className="syncode-bottom-panel" minSize={60} flex={0.33}>
 							<InputBox feature="Input" theme={RoomTheme} setProperty={updateInput} value={input} fontSize={RoomFontSize}/>
 						</ReflexElement>
 						<ReflexSplitter className="syncode-reflex-splitter vertical" />
-						<ReflexElement className="syncode-bottom-panel" minSize={180}>
+						<ReflexElement className="syncode-bottom-panel" minSize={60} flex={0.34}>
 							<Box feature={isError?"Error":"Output"} theme={RoomTheme} value={output} fontSize={RoomFontSize}/>
 						</ReflexElement>
 						<ReflexSplitter className="syncode-reflex-splitter vertical" />
-						<ReflexElement className="syncode-bottom-panel" minSize={180}>
+						<ReflexElement className="syncode-bottom-panel" minSize={60} flex={0.33}>
 							<Box feature="Stats" theme={RoomTheme} value={stats} fontSize={RoomFontSize}/>
 						</ReflexElement>
 					</ReflexContainer>

@@ -43,47 +43,78 @@ body {
 }
 
 /* ==========================================================================
-   Top Navigation Bar (VS Code Title Bar Style)
+   Top Navigation Bar (VS Code Title Bar Style) - Fully Responsive
    ========================================================================== */
 .syncode-editor-nav {
     min-height: 48px;
     height: 48px;
-    padding: 0 12px !important;
+    padding: 0 10px !important;
     background: #252526;
     border-bottom: 1px solid #333333;
     border-radius: 0;
     box-shadow: none;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     flex-shrink: 0;
     z-index: 10;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none; /* Firefox */
+}
+
+.syncode-editor-nav::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+.syncode-nav-left,
+.syncode-nav-center,
+.syncode-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .syncode-brand {
     color: #ffffff !important;
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 1rem;
     letter-spacing: 0.2px;
-    margin-right: 20px;
     display: flex;
     align-items: center;
     gap: 6px;
     text-decoration: none !important;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background 0.15s ease;
+}
+
+.syncode-brand:hover {
+    background: #37373d;
+}
+
+.syncode-title-form {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
 }
 
 .syncode-title-input {
-    min-width: 240px;
-    max-width: 320px;
-    height: 32px;
+    width: 150px;
+    max-width: 220px;
+    height: 30px;
     color: #cccccc;
     background: #3c3c3c;
     border: 1px solid #454545;
     border-radius: 4px;
-    padding: 4px 10px;
-    font-size: 0.85rem;
-    box-shadow: none;
+    padding: 2px 8px;
+    font-size: 0.82rem;
     outline: none;
-    transition: border-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 .syncode-title-input:focus {
@@ -91,36 +122,75 @@ body {
     background: #3c3c3c;
     border-color: #007acc;
     box-shadow: 0 0 0 1px #007acc;
+    width: 180px;
 }
 
-.syncode-editor-nav .MuiIconButton-root {
-    color: #cccccc;
-    padding: 6px;
-    margin: 0 2px;
+.syncode-title-save-btn {
+    background: transparent;
+    border: 1px solid #2ea043;
+    color: #3fb950;
     border-radius: 4px;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    height: 30px;
+    width: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.15s ease;
 }
 
-.syncode-editor-nav .MuiIconButton-root:hover {
+.syncode-title-save-btn:hover {
+    background: #2ea043;
     color: #ffffff;
-    background: #37373d;
 }
 
-.syncode-participants {
-    color: #858585 !important;
-    font-size: 0.82rem;
-    white-space: nowrap;
-    padding: 4px 8px;
+.syncode-run-btn {
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 14px;
+    background: #238636;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.15s ease;
+}
+
+.syncode-run-btn:hover:not(:disabled) {
+    background: #2ea043;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(35, 134, 54, 0.4);
+}
+
+.syncode-run-btn.running,
+.syncode-run-btn:disabled {
+    background: #3c3c3c;
+    color: #858585;
+    border-color: #454545;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.syncode-run-icon {
+    font-size: 1.15rem !important;
 }
 
 .syncode-select {
-    height: 32px;
+    height: 30px;
     color: #cccccc;
     background-color: #3c3c3c;
     border: 1px solid #454545;
     border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 0.82rem;
+    padding: 2px 6px;
+    font-size: 0.8rem;
     outline: none;
     cursor: pointer;
     transition: border-color 0.15s ease;
@@ -138,18 +208,43 @@ body {
     color: #cccccc;
 }
 
-.syncode-nav-action {
-    height: 32px;
+.syncode-lang-select {
+    font-weight: 600;
+    color: #58a6ff;
+}
+
+.syncode-participants-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    margin-left: 4px;
-    padding: 0 10px;
+    gap: 5px;
+    background: #1e1e1e;
+    border: 1px solid #3c3c3c;
+    border-radius: 12px;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #a0a0a0;
+}
+
+.syncode-live-dot {
+    width: 6px;
+    height: 6px;
+    background: #3fb950;
+    border-radius: 50%;
+    box-shadow: 0 0 4px #3fb950;
+}
+
+.syncode-nav-action {
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
     color: #cccccc;
     background: #333333;
     border: 1px solid #454545;
     border-radius: 4px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -165,6 +260,80 @@ body {
     color: #ffffff;
     background: #007acc;
     border-color: #007acc;
+}
+
+.syncode-ai-btn {
+    border-color: rgba(197, 134, 192, 0.4);
+    color: #e5a4e0;
+}
+
+.syncode-ai-btn:hover {
+    background: rgba(197, 134, 192, 0.15);
+    color: #ffffff;
+}
+
+.syncode-ai-btn.active {
+    background: #8957e5;
+    border-color: #8957e5;
+    color: #ffffff;
+}
+
+.syncode-ai-star {
+    color: #d2a8ff;
+    font-size: 0.95rem;
+}
+
+.syncode-icon-btn.MuiIconButton-root {
+    color: #cccccc !important;
+    padding: 5px !important;
+    border-radius: 4px !important;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.syncode-icon-btn.MuiIconButton-root:hover {
+    color: #ffffff !important;
+    background: #37373d !important;
+}
+
+.syncode-leave-btn.MuiIconButton-root {
+    color: #f85149 !important;
+}
+
+.syncode-leave-btn.MuiIconButton-root:hover {
+    background: rgba(248, 81, 73, 0.15) !important;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints for Toolbar
+   ========================================================================== */
+@media (max-width: 900px) {
+    .syncode-title-input {
+        width: 120px;
+    }
+    .syncode-btn-text {
+        font-size: 0.78rem;
+    }
+}
+
+@media (max-width: 720px) {
+    .syncode-title-input {
+        width: 100px;
+    }
+    .syncode-btn-text {
+        display: none;
+    }
+    .syncode-participants-text {
+        display: none;
+    }
+    .syncode-participants-pill {
+        padding: 4px;
+    }
+    .syncode-run-btn {
+        padding: 0 8px;
+    }
+    .syncode-nav-action {
+        padding: 0 6px;
+    }
 }
 
 /* ==========================================================================
@@ -201,9 +370,9 @@ body {
 
 /* Docked Right Side Panel (VS Code Sidebar style) */
 .syncode-docked-panel {
-    width: 380px;
-    min-width: 280px;
-    max-width: 500px;
+    width: clamp(260px, 32vw, 360px);
+    min-width: 240px;
+    max-width: 450px;
     height: 100%;
     flex-shrink: 0;
     background: #252526;
