@@ -4,6 +4,14 @@ A real-time collaborative code editor built with the MERN stack and Socket.io. I
 
 ---
 
+## 🎥 Video Tutorial & Demo
+
+Check out the full walkthrough video of SynCode in action:
+
+▶ **[Watch Video Tutorial (Video syncode project.mp4)](./Video%20syncode%20project.mp4)**
+
+---
+
 ## What It Does
 
 - **Real-Time Code Collaboration:** Edit code simultaneously with peers in shared rooms with live synchronization powered by Socket.io and Monaco Editor.
