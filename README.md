@@ -2,13 +2,17 @@
 
 A real-time collaborative code editor built with the MERN stack and Socket.io. It allows multiple developers to write, discuss, and run code together in virtual rooms with multi-language execution and an integrated AI assistant.
 
+🚀 **Live App:** [https://collaborative-code-editor-lyart.vercel.app](https://collaborative-code-editor-lyart.vercel.app)
+
 ---
 
-## 🎥 Video Tutorial & Demo
+## 🎥 Video Tutorial & Walkthrough
 
-Check out the full walkthrough video of SynCode in action:
+Click the preview below to watch the complete step-by-step video demonstration on YouTube:
 
-▶ **[Watch Video Tutorial (Video syncode project.mp4)](./Video%20syncode%20project.mp4)**
+[![SynCode Video Tutorial](https://img.youtube.com/vi/cw6yEEWXNL4/maxresdefault.jpg)](https://youtu.be/cw6yEEWXNL4)
+
+> 📺 **YouTube Link:** [https://youtu.be/cw6yEEWXNL4](https://youtu.be/cw6yEEWXNL4)
 
 ---
 
